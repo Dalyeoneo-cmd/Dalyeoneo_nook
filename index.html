@@ -66,6 +66,12 @@
   .filters sup{font-size:10px;margin-left:3px}
   .wall{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:96px 88px;max-width:1280px;margin:0 auto}
   .work{width:min(var(--w),100%);margin:0}
+  /* 작품 더 보기 */
+  .more-wrap{text-align:center;margin-top:88px}
+  .more-wrap[hidden]{display:none}
+  .more-btn{font-size:14px;padding:12px 26px;border:1px solid var(--line);color:var(--ink);transition:border-color .2s,color .2s}
+  .more-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .more-btn .count{color:var(--muted);margin-left:10px;font-size:12.5px;font-variant-numeric:tabular-nums}
   .work button{display:block;width:100%;text-align:left;cursor:zoom-in}
   .work figcaption{margin-top:14px;font-size:13px;color:var(--muted);width:max-content;max-width:240px}
   .work figcaption .t{font-family:var(--serif);font-size:15px;color:var(--ink);margin-right:6px}
@@ -83,6 +89,9 @@
   .scale-note{text-align:center;font-size:12px;color:var(--muted);margin-top:96px}
   .art{position:relative;width:100%;overflow:hidden;background:#e7e8e5}
   .art svg,.art img{display:block;width:100%;height:100%;object-fit:cover}
+  .art img{object-fit:contain}           /* 사진은 절대 잘리지 않게 */
+  .art.loaded{background:transparent}
+  .art.is-video img{object-fit:cover}     /* 영상 대표 장면은 화면 비율에 꽉 채움 */
   .art .no-photo{width:100%;height:100%;background:#E7E8E5}
   .art video,.art iframe{display:block;width:100%;height:100%;border:0;background:#000}
   .art .play{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(244,245,243,.92);display:grid;place-items:center}
@@ -217,6 +226,13 @@
     .cv-list.edu li{grid-template-columns:54px 34px 40px 1fr;gap:0}
     .cv-list .type{padding:2px 6px;font-size:11.5px}
     .work{width:100%}
+    /* 분류 메뉴: 한 줄로, 옆으로 밀어서 보기 */
+    .works-head{margin-bottom:56px;gap:14px}
+    .filters{flex-wrap:nowrap;overflow-x:auto;gap:22px;width:calc(100% + var(--pad));margin-right:calc(-1 * var(--pad));padding-right:var(--pad);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .filters::-webkit-scrollbar{display:none}
+    .filters button{flex:none;white-space:nowrap}
+    .filters.more-right{-webkit-mask-image:linear-gradient(to right,#000 80%,transparent);mask-image:linear-gradient(to right,#000 80%,transparent)}
+    .more-wrap{margin-top:64px}
   }
 </style>
 </head>
@@ -248,7 +264,8 @@
       <div class="filters" id="filters" role="group" aria-label="분류별 보기"></div>
     </div>
     <div class="wall" id="wall"></div>
-    <p class="scale-note">작품은 실제 크기의 비율에 맞춰 걸려 있습니다(영상 제외). 누르면 크게 보거나 재생할 수 있습니다.</p>
+    <div class="more-wrap" id="moreWrap" hidden><button type="button" class="more-btn" id="moreBtn">작품 더 보기<span class="count" id="moreCount"></span></button></div>
+    <p class="scale-note">회화와 입체 작품은 실제 크기의 비율에 맞춰 걸려 있습니다. 누르면 크게 보거나 재생할 수 있습니다.</p>
   </section>
 
   <section id="about" class="split">
@@ -411,7 +428,8 @@ function normalizeWork(r){
     wk.duration = clean(r.duration);
     const url = String(clean(r.video)).trim();
     if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) wk.video = localPath(url); else if (url) wk.embed = url;
-  } else if (!wk.w || !wk.h) { wk.ratio = "4:5"; wk.size = "크기 미정"; }
+  }
+  wk.size = String(clean(r.size_text)).trim();   /* 크기 (직접 적기): 있으면 cm 대신 이 글이 보여요 */
   wk._y = wk.year; wk._file = r._file;
   return wk;
 }
@@ -517,9 +535,13 @@ function graphic(W,H,a,id){
 }
 
 const isVideo = wk => wk.cat === "미디어 영상";
+/* 화면에 보이는 비율: 영상은 고른 화면 비율, 사진이 있으면 사진 자체의 비율.
+   사진을 불러오기 전에는 적어 준 크기(없으면 4:5)로 자리를 잡아 두었다가, 불러오면 사진 비율로 맞춰요. */
 function ratioOf(wk){
-  if(wk.ratio){ const [a,b]=wk.ratio.split(":").map(Number); return a/b; }
-  return wk.w/wk.h;
+  if(isVideo(wk) && wk.ratio){ const [a,b]=wk.ratio.split(":").map(Number); return a/b; }
+  if(wk._r) return wk._r;
+  if(wk.w && wk.h) return wk.w/wk.h;
+  return 0.8;
 }
 function toEmbed(url){
   const yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
@@ -534,7 +556,7 @@ function artHTML(wk, opts={}){
   const ratio = ratioOf(wk);
   let inner;
   if(wk.image){
-    inner = `<img src="${wk.image}" alt="${wk.title}, ${wk.year}, ${wk.medium}" loading="lazy">`;
+    inner = `<img src="${wk.image}" alt="${wk.title}, ${wk.year}, ${wk.medium}" loading="lazy" data-wi="${works.indexOf(wk)}">`;
   } else if(!wk.art){
     inner = `<div class="no-photo" role="img" aria-label="${wk.title}"></div>`;
   } else {
@@ -546,7 +568,7 @@ function artHTML(wk, opts={}){
     inner = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${wk.title} 임시 도판">${body}</svg>`;
   }
   const extra = isVideo(wk) ? (opts.note && !wk.video && !wk.embed ? `<p class="media-note">영상 파일이나 주소를 연결하면 여기서 재생됩니다.</p>` : `<span class="play" aria-hidden="true"></span>`) : "";
-  return `<div class="art" style="aspect-ratio:${ratio}">${inner}${extra}</div>`;
+  return `<div class="art${isVideo(wk)?" is-video":""}" style="aspect-ratio:${ratio}">${inner}${extra}</div>`;
 }
 
 /* 크게 보기용: 영상이면 실제 플레이어 */
@@ -562,12 +584,14 @@ function mediaHTML(wk){
 }
 
 function sizeText(wk){
-  if(wk.duration) return wk.duration;
   if(wk.size) return wk.size;
+  if(wk.duration) return wk.duration;
+  if(!wk.w || !wk.h) return "";
   return wk.d ? `${wk.h} × ${wk.w} × ${wk.d} cm` : `${wk.h} × ${wk.w} cm`;
 }
 function labelHTML(wk){
-  return `<p class="t">${wk.title}, <i>${wk.year}</i></p><p>${wk.medium}</p><p>${sizeText(wk)}</p>${wk.edition?`<p>${wk.edition}</p>`:""}`;
+  const size = sizeText(wk);
+  return `<p class="t">${wk.title}, <i>${wk.year}</i></p>${wk.medium?`<p>${wk.medium}</p>`:""}${size?`<p>${size}</p>`:""}${wk.edition?`<p>${wk.edition}</p>`:""}`;
 }
 
 /* 가격과 판매 상태 */
@@ -603,13 +627,34 @@ function worksInShow(it){
 }
 
 /* 실제 높이에 비례한 표시 크기 */
+/* 회화·입체는 실제 세로 길이에 비례해서, 나머지(디지털 드로잉·그래픽·영상)는 같은 크기로 걸어요. */
+const REAL_SCALE = ["회화", "입체"];
 function displayWidth(wk){
+  const r = ratioOf(wk);
   if(isVideo(wk)) return 440;
-  let h = Math.min(360, 120 + wk.h*1.2);
-  let w = h * (wk.w/wk.h);
-  if(w > 540){ w = 540; }
-  return Math.round(w);
+  if(!REAL_SCALE.includes(wk.cat) || !wk.h) return Math.round(Math.min(300, 230 * r));   /* 가로 300px, 세로 230px 안에 맞춤 (91cm 회화와 비슷한 크기) */
+  const h = Math.min(360, 120 + wk.h*1.2);
+  return Math.round(Math.min(540, h * r));
 }
+
+/* ---------- 사진을 불러오면 사진 비율로 맞추기 ---------- */
+function applyNaturalRatio(img){
+  if(!img.naturalWidth || !img.naturalHeight) return;
+  const i = +img.dataset.wi, wk = works[i]; if(!wk || isVideo(wk)) return;
+  const r = img.naturalWidth / img.naturalHeight;
+  const changed = !wk._r || Math.abs(wk._r - r) > 0.001;
+  wk._r = r;
+  document.querySelectorAll(`img[data-wi="${i}"]`).forEach(el => {
+    const art = el.closest(".art"); if(!art) return;
+    art.classList.add("loaded");
+    if(!art.closest(".viewer-art")) art.style.aspectRatio = r;
+    const fig = art.closest("figure.work"); if(fig) fig.style.setProperty("--w", displayWidth(wk) + "px");
+  });
+  if(!changed) return;
+  if(i === 0) heroArt.style.maxWidth = `calc(72svh * ${r})`;
+  if(viewer.open && vIndex === i) fitViewer();
+}
+document.addEventListener("load", e => { if(e.target.matches && e.target.matches("img[data-wi]")) applyNaturalRatio(e.target); }, true);
 
 /* ---------- 화면 구성 ---------- */
 const heroArt=document.getElementById("heroArt");
@@ -633,6 +678,7 @@ if(works.length) wall.innerHTML = works.map((wk,i)=>`
     </button>
   </figure>`).join("");
 wall.addEventListener("click",e=>{ const b=e.target.closest("button[data-i]"); if(b) openViewer(+b.dataset.i); });
+setTimeout(() => document.querySelectorAll("img[data-wi]").forEach(img => { if(img.complete) applyNaturalRatio(img); }), 0); // 이미 불러온 사진
 
 const cats=["전체",...CATEGORIES.filter(c=>works.some(w=>w.cat===c))];
 const filters=document.getElementById("filters");
@@ -641,12 +687,36 @@ filters.innerHTML=cats.map(c=>{
   return `<button type="button" data-cat="${c}" aria-pressed="${c==="전체"}">${c}<sup>${n}</sup></button>`;
 }).join("");
 let currentCat="전체";
+/* 한 번에 보여줄 작품 수: 휴대폰 6점, 컴퓨터 12점. '작품 더 보기'를 누르면 그만큼 더 보여요. */
+const PAGE = () => matchMedia("(max-width:560px)").matches ? 6 : 12;
+let shown = PAGE();
+const moreWrap=document.getElementById("moreWrap"), moreBtn=document.getElementById("moreBtn");
+function applyWall(){
+  const figs=[...wall.querySelectorAll(".work")];
+  const inCat=figs.filter(f=>currentCat==="전체" || f.dataset.cat===currentCat);
+  figs.forEach(f=>{ f.hidden = true; });
+  inCat.forEach((f,k)=>{ f.hidden = k >= shown; });
+  const visible=Math.min(shown, inCat.length);
+  moreWrap.hidden = visible >= inCat.length;
+  document.getElementById("moreCount").textContent = `${visible} / ${inCat.length}`;
+}
+moreBtn.addEventListener("click",()=>{
+  const first=[...wall.querySelectorAll(".work")].filter(f=>f.hidden && (currentCat==="전체"||f.dataset.cat===currentCat))[0];
+  shown += PAGE(); applyWall();
+  if(first) first.querySelector("button")?.focus({preventScroll:true});   // 키보드 사용자는 새로 나온 작품으로
+});
+function updateFilterFade(){ filters.classList.toggle("more-right", filters.scrollLeft + filters.clientWidth < filters.scrollWidth - 2); }
+filters.addEventListener("scroll",updateFilterFade,{passive:true});
+window.addEventListener("resize",updateFilterFade);
+updateFilterFade();
 filters.addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b) return;
   currentCat=b.dataset.cat;
   filters.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
-  wall.querySelectorAll(".work").forEach(f=>{ f.hidden = currentCat!=="전체" && f.dataset.cat!==currentCat; });
+  b.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});
+  shown = PAGE(); applyWall();
 });
+applyWall();
 
 const TYPE_CLASS={ "개인전":"solo", "기획전":"curated", "그룹전":"group" };
 document.getElementById("cvBody").innerHTML=cv.filter(g=>g.items.length).map(g=>{
@@ -696,6 +766,7 @@ function renderViewer(){
   const wk=works[vIndex], list=visibleIndexes(), pos=list.indexOf(vIndex);
   vArt.innerHTML=mediaHTML(wk);
   fitViewer();
+  const vImg = vArt.querySelector("img[data-wi]"); if(vImg && vImg.complete) applyNaturalRatio(vImg);
   document.getElementById("vLabel").innerHTML=labelHTML(wk);
   document.getElementById("vNum").textContent = wk.number ? `작품 번호 ${wk.number}` : "";
   document.getElementById("vDesc").textContent=wk.desc||"";
