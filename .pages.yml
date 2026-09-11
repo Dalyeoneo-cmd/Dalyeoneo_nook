@@ -1,5 +1,5 @@
 # 달연어 포트폴리오 관리 화면(Pages CMS) 설정
-# GitHub에 올린 뒤 파일 이름을 .pages.yml 로 바꿔 주세요 (맨 앞에 점).
+# 저장소에서는 .pages.yml 이라는 이름으로 있어요.
 
 media:
   input: images
@@ -183,3 +183,46 @@ content:
         label: 학교 및 학과
         type: string
         required: true
+
+  # ---------------- 사이트 정보 ----------------
+  - name: profile
+    label: 사이트 정보
+    type: file
+    path: _data/profile.json
+    format: json
+    fields:
+      - name: name_ko
+        label: 이름
+        type: string
+      - name: name_en
+        label: 영문 이름
+        type: string
+      - name: intro
+        label: 첫 화면 소개 문구
+        type: text
+      - name: statement
+        label: 작가 노트
+        type: text
+        description: "문단 사이는 빈 줄 하나로 나눠요. 문단 안에서 줄을 바꾸면, 한 줄에 다 들어가는 넓은 화면에서만 그 자리에서 줄이 바뀌어요."
+      - name: character
+        label: 캐릭터 그림
+        type: image
+      - name: character_caption
+        label: 캐릭터 캡션
+        type: string
+        description: "그림 아래에 보이는 글이에요. 예: 작가 캐릭터, 디지털 드로잉"
+      - name: character_alt
+        label: 캐릭터 그림 설명
+        type: text
+        description: 화면에는 보이지 않고, 앞이 잘 보이지 않는 분이 쓰는 화면 읽기 프로그램이 읽어 주는 설명이에요. 그림을 바꾸면 함께 고쳐 주세요.
+      - name: email
+        label: 이메일
+        type: string
+        description: 연락처와 문의 양식이 이 주소를 써요.
+      - name: instagram
+        label: 인스타그램 아이디
+        type: string
+        description: "@ 없이 아이디만 적어요. 예: dal_yeoneo_nook"
+      - name: inquiry
+        label: 문의 가능 분야
+        type: string
