@@ -51,7 +51,7 @@ content:
       - name: image
         label: 작품 사진
         type: image
-        description: "작품 가장자리에 맞춰 자르고 긴 쪽 2000px 정도로 줄여서 올려 주세요. 영상은 대표 장면을 올리면 목록에 보여요."
+        description: "사이트에는 올린 사진의 비율 그대로 보여요. 작품 가장자리에 맞춰 자르고 긴 쪽 2000px 정도로 줄여서 올려 주세요. 영상은 대표 장면을 올리면 목록에 보여요."
       - name: medium
         label: 재료
         type: string
@@ -59,6 +59,7 @@ content:
       - name: h
         label: 세로 (cm)
         type: number
+        description: 회화·입체는 이 실제 크기에 비례해서 사이트에 크고 작게 걸려요. 디지털 드로잉·그래픽은 크기와 상관없이 같은 크기로 걸려요.
       - name: w
         label: 가로 (cm)
         type: number
@@ -66,6 +67,10 @@ content:
         label: 깊이 (cm)
         type: number
         description: 입체 작품만 적어요.
+      - name: size_text
+        label: 크기 (직접 적기)
+        type: string
+        description: "cm가 아닌 크기를 캡션에 쓰고 싶을 때 적어요. 적으면 위의 cm 대신 이 글이 보여요. 예: 3000 × 4000 px, 가변 크기"
       - name: edition
         label: 에디션
         type: string
