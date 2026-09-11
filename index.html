@@ -166,6 +166,8 @@
   .viewer-side .label .t{font-size:22px;display:block;margin-bottom:8px}
   .viewer-side .desc{font-size:14px;color:var(--ink);margin-top:20px}
   .viewer-side > div:first-child{overflow-y:auto;min-height:0}
+  .v-num{margin:12px 0 0;font-size:12.5px;color:var(--muted);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .v-num:empty{display:none}
   .v-sale{margin:14px 0 0}
   .v-sale .price{font-size:15px}
   .v-sale .sale{font-size:13.5px}
@@ -315,6 +317,7 @@
     <div class="viewer-side">
       <div>
         <div class="label" id="vLabel"></div>
+        <p class="v-num" id="vNum"></p>
         <p class="v-sale" id="vSale"></p>
         <p class="desc" id="vDesc"></p>
         <div class="shows" id="vShows"></div>
@@ -397,7 +400,7 @@ function normalizeWork(r){
   const wk = {
     title: clean(r.title) || "제목 없음", year: String(clean(r.year)), cat: clean(r.cat) || "회화",
     medium: clean(r.medium), w: num(r.w), h: num(r.h), d: num(r.d),
-    edition: clean(r.edition), desc: clean(r.desc), status: clean(r.status),
+    edition: clean(r.edition), desc: clean(r.desc), status: clean(r.status), number: String(clean(r.number)).trim(),
     image: localPath(r.image), featured: r.featured === true || r.featured === "true",
     exhibited: listOf(r.exhibited).map(x => String(x).trim()).filter(Boolean),
   };
@@ -694,6 +697,7 @@ function renderViewer(){
   vArt.innerHTML=mediaHTML(wk);
   fitViewer();
   document.getElementById("vLabel").innerHTML=labelHTML(wk);
+  document.getElementById("vNum").textContent = wk.number ? `작품 번호 ${wk.number}` : "";
   document.getElementById("vDesc").textContent=wk.desc||"";
   document.getElementById("vSale").innerHTML=saleHTML(wk);
   const shows=(wk.exhibited||[]).map(k=>{
