@@ -221,7 +221,7 @@
 <body>
 
 <header class="site-header">
-  <a class="site-name" href="#top">달연어<span lang="en">Dal Yeon-eo</span></a>
+  <a class="site-name" id="siteName" href="#top">달연어<span lang="en">Dal Yeon-eo</span></a>
   <nav class="site-nav" aria-label="주요 메뉴">
     <a href="#works">작업</a>
     <a href="#about">작가 노트</a>
@@ -233,8 +233,8 @@
 <main id="top">
   <div class="hero">
     <div class="hero-intro">
-      <strong>달연어<span lang="en">Dal Yeon-eo</span></strong>
-      말로 다 담을 수 없는 내밀한 감정과 존재론적 질문을 물감의 물성으로 캔버스에 옮기는 작업을 한다.
+      <strong id="heroName">달연어<span lang="en">Dal Yeon-eo</span></strong>
+      <span id="heroIntro">말로 다 담을 수 없는 내밀한 감정과 존재론적 질문을 물감의 물성으로 캔버스에 옮기는 작업을 한다.</span>
     </div>
     <button class="hero-art" id="heroArt" aria-label="대표작 크게 보기"></button>
     <div class="hero-label label" id="heroLabel"></div>
@@ -254,14 +254,14 @@
       <h2>작가 노트</h2>
     </div>
     <div class="about-body">
-      <div class="statement-text">
+      <div class="statement-text" id="statementText">
         <p class="statement">학창 시절의 우울감을 마주하는 데서 시작된 작업은 <br class="wide">인간에 대한 호기심과 ‘나’에 대한 탐구를 거쳐, 삶과 죽음이라는 존재론적 질문으로 이어졌다.</p>
         <p class="statement">손가락으로 물감을 문지르고, 흘러내리는 선을 만들며 되돌릴 수 없는 시간을 기록한다. <br class="wide">때때로 등장하는 실과 바느질 자국으로 완벽하지 않아도 이어지려는 인간적 관계를 은유한다.</p>
         <p class="statement">평면 캔버스를 넘어 디지털드로잉, 영상, 입체 작업으로 영역을 확장하며 <br class="wide">시간과 감정의 흐름, 그리고 존재의 ‘미완’을 탐구한다.</p>
       </div>
       <figure class="profile">
-        <img src="images/character.png" alt="작가 달연어의 캐릭터. X자 눈과 바느질로 꿰맨 빨간 심장을 가진 토끼가 링거 줄에 연결되어 서 있다." width="603" height="900">
-        <figcaption>작가 캐릭터, 디지털 드로잉</figcaption>
+        <img id="profileImg" src="images/character.png" alt="작가 달연어의 캐릭터. X자 눈과 바느질로 꿰맨 빨간 심장을 가진 토끼가 링거 줄에 연결되어 서 있다." width="603" height="900">
+        <figcaption id="profileCap">작가 캐릭터, 디지털 드로잉</figcaption>
       </figure>
     </div>
   </section>
@@ -276,11 +276,11 @@
     <div class="contact-body">
       <dl class="contact-lines">
         <dt>이메일</dt>
-        <dd><a href="mailto:chicdotori00@gmail.com">chicdotori00@gmail.com</a></dd>
+        <dd><a id="contactMail" href="mailto:chicdotori00@gmail.com">chicdotori00@gmail.com</a></dd>
         <dt>인스타그램</dt>
-        <dd><a href="https://www.instagram.com/dal_yeoneo_nook/" target="_blank" rel="noopener">@dal_yeoneo_nook</a></dd>
+        <dd><a id="contactInsta" href="https://www.instagram.com/dal_yeoneo_nook/" target="_blank" rel="noopener">@dal_yeoneo_nook</a></dd>
         <dt>문의 가능 분야</dt>
-        <dd>전시 제안, 작품 구매, 커미션, 협업</dd>
+        <dd id="contactFields">전시 제안, 작품 구매, 커미션, 협업</dd>
       </dl>
       <div class="msg" id="msgForm">
         <div class="field">
@@ -304,7 +304,7 @@
 </main>
 
 <footer>
-  <span>© 2026 달연어 Dal Yeon-eo. 모든 작품 이미지의 저작권은 작가에게 있습니다.</span>
+  <span>© <span id="footerYear">2026</span> <span id="footerName">달연어 Dal Yeon-eo</span>. 모든 작품 이미지의 저작권은 작가에게 있습니다.</span>
   <a href="#top">맨 위로</a>
 </footer>
 
@@ -359,6 +359,39 @@ const yearKey = y => { const [a, b] = String(y ?? "").split(/[.\-\/]/); return (
 const byYearDesc = (a, b) => (yearKey(b._y) - yearKey(a._y)) || String(b._file || "").localeCompare(String(a._file || ""));
 /* data/site.json 의 각 항목: { _file: 파일 이름, data: 입력한 내용 } */
 const entries = v => listOf(v).map(e => (e && e.data) ? { ...e.data, _file: e._file } : e).filter(Boolean);
+
+/* ---------- 사이트 정보(이름, 소개 문구, 작가 노트, 연락처) ----------
+   관리 화면의 '사이트 정보'에서 고쳐요. 칸을 비워 두면 원래 문구가 그대로 보여요. */
+const esc = t => String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const P = (DATA && DATA.profile && typeof DATA.profile === "object") ? DATA.profile : {};
+const pv = k => String(clean(P[k])).trim();
+const $ = id => document.getElementById(id);
+if (pv("name_ko")) {
+  const ko = pv("name_ko"), en = pv("name_en");
+  const nameHTML = esc(ko) + (en ? `<span lang="en">${esc(en)}</span>` : "");
+  $("siteName").innerHTML = nameHTML;
+  $("heroName").innerHTML = nameHTML;
+  $("footerName").textContent = en ? `${ko} ${en}` : ko;
+  document.title = en ? `${ko} ${en}` : ko;
+}
+if (pv("intro")) $("heroIntro").textContent = pv("intro");
+if (pv("statement")) {
+  /* 빈 줄 = 문단 나눔, 줄바꿈 = 넓은 화면에서만 지키는 줄바꿈 */
+  $("statementText").innerHTML = pv("statement").replace(/\r\n?/g, "\n").split(/\n\s*\n/)
+    .map(p => p.trim()).filter(Boolean)
+    .map(p => `<p class="statement">${p.split("\n").map(l => esc(l.trim())).join(' <br class="wide">')}</p>`).join("");
+}
+if (pv("character")) $("profileImg").src = localPath(pv("character"));
+if (pv("character_alt")) $("profileImg").alt = pv("character_alt");
+if (pv("character_caption")) $("profileCap").textContent = pv("character_caption");
+if (pv("email")) { $("contactMail").href = "mailto:" + pv("email"); $("contactMail").textContent = pv("email"); }
+if (pv("instagram")) {
+  const id = pv("instagram").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^@/, "").replace(/\/.*$/, "");
+  $("contactInsta").href = `https://www.instagram.com/${encodeURIComponent(id)}/`;
+  $("contactInsta").textContent = "@" + id;
+}
+if (pv("inquiry")) $("contactFields").textContent = pv("inquiry");
+$("footerYear").textContent = new Date().getFullYear();
 
 function normalizeWork(r){
   const wk = {
@@ -727,7 +760,7 @@ const io=new IntersectionObserver(entries=>{
 ["works","about","cv","contact"].forEach(id=>io.observe(document.getElementById(id)));
 
 /* ---------- 문의 메일 ---------- */
-const TO="chicdotori00@gmail.com";
+const TO=pv("email")||"chicdotori00@gmail.com";
 document.getElementById("sendBtn").addEventListener("click",()=>{
   const name=document.getElementById("mName").value.trim();
   const mail=document.getElementById("mMail").value.trim();

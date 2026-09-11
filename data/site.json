@@ -2,5 +2,6 @@
 # 이 파일은 GitHub Pages가 _data 폴더의 내용을 모아 자동으로 만들어요. 고치지 마세요.
 ---
 {% assign groups = "works,exhibitions,education" | split: "," %}{
+"profile": {{ site.data.profile | jsonify }},
 {% for g in groups %}"{{ g }}": [{% for p in site.data[g] %}{"_file": {{ p[0] | jsonify }}, "data": {{ p[1] | jsonify }}}{% unless forloop.last %},{% endunless %}{% endfor %}]{% unless forloop.last %},{% endunless %}
 {% endfor %}}
