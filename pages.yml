@@ -1,0 +1,185 @@
+# 달연어 포트폴리오 관리 화면(Pages CMS) 설정
+# GitHub에 올린 뒤 파일 이름을 .pages.yml 로 바꿔 주세요 (맨 앞에 점).
+
+media:
+  input: images
+  output: /images
+  rename: random
+  categories: [image]
+
+content:
+  # ---------------- 작품 ----------------
+  - name: works
+    label: 작품
+    type: collection
+    path: _data/works
+    format: json
+    filename: "{year}{month}{day}-{hour}{minute}{second}.json"
+    view:
+      fields: [title, year, cat, status]
+      primary: title
+      sort: [year, title]
+      default:
+        sort: year
+        order: desc
+    fields:
+      - name: title
+        label: 제목
+        type: string
+        required: true
+      - name: year
+        label: 제작 연도
+        type: string
+        required: true
+        description: "월까지 적어요. 예: 2026.8"
+        pattern:
+          regex: "^\\d{4}(\\.\\d{1,2})?$"
+          message: "2026.8 처럼 연도.월 형식으로 적어 주세요"
+      - name: cat
+        label: 분류
+        type: select
+        required: true
+        options:
+          values: [회화, 입체, 디지털 드로잉, 그래픽, 미디어 영상]
+      - name: image
+        label: 작품 사진
+        type: image
+        description: "작품 가장자리에 맞춰 자르고 긴 쪽 2000px 정도로 줄여서 올려 주세요. 영상은 대표 장면을 올리면 목록에 보여요."
+      - name: medium
+        label: 재료
+        type: string
+        description: "예: 나무판에 혼합재료"
+      - name: h
+        label: 세로 (cm)
+        type: number
+      - name: w
+        label: 가로 (cm)
+        type: number
+      - name: d
+        label: 깊이 (cm)
+        type: number
+        description: 입체 작품만 적어요.
+      - name: edition
+        label: 에디션
+        type: string
+        description: "판화·프린트 작품만 적어요. 예: 에디션 5"
+      - name: video
+        label: 영상 주소
+        type: string
+        description: 미디어 영상만 적어요. 유튜브나 비메오 주소를 붙여 넣으면 돼요.
+      - name: duration
+        label: 러닝타임
+        type: string
+        description: "미디어 영상만 적어요. 예: 6분 12초"
+      - name: ratio
+        label: 화면 비율
+        type: select
+        description: 미디어 영상만 골라요. 비워 두면 16:9로 보여요.
+        options:
+          values: ["16:9", "4:3", "1:1", "9:16"]
+      - name: price
+        label: 가격
+        type: string
+        description: "숫자만 적으면 500,000원처럼 보여요. '가격 문의'처럼 글로 적어도 돼요. 없으면 비워 두세요."
+      - name: status
+        label: 판매 상태
+        type: select
+        description: 판매 가능한 작품은 비워 두세요.
+        options:
+          values: [판매 완료, 판매 예약, 판매 불가]
+      - name: exhibited
+        label: 출품 전시
+        type: string
+        list: true
+        description: "전시 이력에 있는 전시 이름의 일부를 적어요. 예: 빛의 감각"
+      - name: desc
+        label: 설명
+        type: text
+      - name: featured
+        label: 첫 화면 대표작
+        type: boolean
+        description: 체크한 작품이 첫 화면에 걸려요. 아무것도 체크하지 않으면 가장 최근 작품이 걸려요.
+
+  # ---------------- 전시 이력 ----------------
+  - name: exhibitions
+    label: 전시 이력
+    type: collection
+    path: _data/exhibitions
+    format: json
+    filename: "{year}{month}{day}-{hour}{minute}{second}.json"
+    view:
+      fields: [title, year, type]
+      primary: title
+      sort: [year, title]
+      default:
+        sort: year
+        order: desc
+    fields:
+      - name: year
+        label: 연도
+        type: string
+        required: true
+        pattern:
+          regex: "^\\d{4}$"
+          message: "2026 처럼 연도만 적어 주세요"
+      - name: title
+        label: 전시 이름
+        type: string
+        required: true
+        description: "《 》까지 함께 적어요. 예: 《빛의 감각 展》"
+      - name: type
+        label: 종류
+        type: select
+        required: true
+        options:
+          values: [개인전, 기획전, 그룹전]
+      - name: place
+        label: 장소
+        type: string
+      - name: city
+        label: 지역
+        type: string
+        description: "예: 서울"
+      - name: period
+        label: 전시 기간
+        type: string
+        description: "예: 2026.9.3 – 9.15. 기간·포스터·소개 중 하나라도 넣으면 이력에서 전시 이름을 눌러 볼 수 있어요."
+      - name: poster
+        label: 포스터
+        type: image
+      - name: desc
+        label: 전시 소개
+        type: text
+
+  # ---------------- 학력 ----------------
+  - name: education
+    label: 학력
+    type: collection
+    path: _data/education
+    format: json
+    filename: "{year}{month}{day}-{hour}{minute}{second}.json"
+    view:
+      fields: [school, year, degree]
+      primary: school
+      default:
+        sort: year
+        order: desc
+    fields:
+      - name: year
+        label: 졸업 연도
+        type: string
+        required: true
+      - name: status
+        label: 상태
+        type: select
+        options:
+          values: [졸업, 재학, 수료, 휴학]
+      - name: degree
+        label: 학위
+        type: select
+        options:
+          values: [학사, 석사, 박사]
+      - name: school
+        label: 학교 및 학과
+        type: string
+        required: true
