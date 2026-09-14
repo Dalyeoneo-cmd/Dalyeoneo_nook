@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>작품 보증서</title>
+<link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=IBM+Plex+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     작품 보증서 (Certificate of Authenticity)
+     - 사이트 어디에도 링크되어 있지 않고 검색엔진에도 잡히지 않습니다.
+     - 작품 정보는 data/site.json 에서 자동으로 채워집니다.
+     - 소장자 이름 등 여기에 적는 내용은 어디에도 저장되지 않고,
+       인쇄(PDF 저장)할 때만 쓰입니다.
+     ============================================================ */
+  :root{
+    --ink:#1E2022; --muted:#767A7E; --line:#DADCD8; --accent:#2B3FA0;
+    --sans:"IBM Plex Sans KR", system-ui, -apple-system, sans-serif;
+    --serif:"Gowun Batang", "Nanum Myeongjo", serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#8A8D88;color:var(--ink);font-family:var(--sans);font-weight:300;
+       -webkit-font-smoothing:antialiased}
+  img{max-width:100%}
+
+  .bar{position:sticky;top:0;z-index:10;background:#2A2C2E;color:#fff;padding:14px 20px;
+       display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px}
+  .bar button{font:inherit;font-size:14px;background:#fff;color:#1E2022;border:0;border-radius:3px;
+              padding:9px 20px;cursor:pointer}
+  .bar button:hover{background:#E7E8E5}
+  .bar .hint{color:#B9BCC0;font-size:13px}
+
+  /* 입력 칸 (화면에서만 보이고 PDF에는 안 나와요) */
+  .form{max-width:210mm;margin:0 auto 14px;background:#fff;padding:18px 20px 20px}
+  .form h2{font-size:14px;font-weight:500;margin:0 0 4px}
+  .form .lead{font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.7}
+  .row{display:flex;flex-wrap:wrap;gap:14px}
+  .field{flex:1;min-width:190px;display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  .field label{font-size:12px;color:var(--muted)}
+  .field input,.field select{font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);
+                             border-radius:3px;background:#fff;color:var(--ink)}
+  .field input:focus,.field select:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .field .note{font-size:11.5px;color:var(--muted)}
+
+  /* 보증서 */
+  .page{width:210mm;height:297mm;padding:18mm 22mm 16mm;margin:0 auto 14px;background:#fff;
+        display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .head{text-align:center;padding-bottom:7mm;border-bottom:1px solid var(--line)}
+  .head .ko{font-family:var(--serif);font-size:23px;letter-spacing:.06em;margin:0}
+  .head .en{font-size:11.5px;letter-spacing:.16em;color:var(--muted);margin:5px 0 0;text-transform:uppercase}
+  .head .artist{font-family:var(--serif);font-size:15px;margin:6mm 0 0}
+  .head .artist span{font-family:var(--sans);font-size:12px;color:var(--muted);margin-left:8px}
+
+  .art{margin:8mm 0 7mm;flex:1;min-height:0;display:flex;justify-content:center;align-items:center}
+  .art img{max-height:100%;width:auto;object-fit:contain}
+  .art .no-photo{width:60mm;height:100%;max-height:80mm;background:#EDEEEB}
+
+  .info{margin:0 0 7mm;border-top:1px solid var(--line)}
+  .info dl{display:grid;grid-template-columns:26mm 1fr;margin:0}
+  .info dt,.info dd{padding:2.2mm 0;border-bottom:1px solid var(--line);margin:0;font-size:12.5px;line-height:1.55}
+  .info dt{color:var(--muted);font-size:12px}
+  .info dd .title{font-family:var(--serif);font-size:15px}
+
+  .statement{font-size:12.5px;line-height:1.95;margin:0;text-align:center;color:var(--ink)}
+  .statement .small{display:block;font-size:11.5px;color:var(--muted);margin-top:3mm;line-height:1.8}
+
+  .sign{display:flex;justify-content:space-between;align-items:flex-end;gap:14mm;margin-top:10mm}
+  .sign .date{font-size:12.5px;color:var(--muted)}
+  .sign .date b{display:block;color:var(--ink);font-weight:400;font-size:13.5px;margin-top:2mm}
+  .sign .who{text-align:right;min-width:60mm}
+  .sign .who .label{font-size:12px;color:var(--muted)}
+  .sign .who .line{border-bottom:1px solid var(--ink);height:17mm;display:flex;align-items:flex-end;
+                   justify-content:flex-end;padding-bottom:2mm}
+  .sign .who .line img{max-height:15mm;width:auto}
+  .sign .who .name{font-family:var(--serif);font-size:14px;margin-top:2.5mm}
+
+  .foot{margin-top:8mm;padding-top:3.5mm;border-top:1px solid var(--line);
+        display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+
+  .loading{padding:40mm 0;text-align:center;color:var(--muted);font-size:14px}
+
+  @page{size:A4;margin:0}
+  @media print{
+    body{background:#fff}
+    .bar,.form{display:none}
+    .page{margin:0;box-shadow:none}
+  }
+  @media screen{ .page{box-shadow:0 10px 30px -18px rgba(0,0,0,.5)} }
+  @media screen and (max-width:230mm){
+    .page{width:100%;height:auto;padding:28px 22px}
+    .art img{max-height:50vh}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <button type="button" id="printBtn">PDF로 저장하기</button>
+  <span class="hint">저장 창이 열리면 프린터를 ‘PDF로 저장’으로 고르세요.</span>
+</div>
+
+<div class="form" id="form"></div>
+<div id="out"><p class="loading">작품 정보를 불러오는 중이에요…</p></div>
+
+<script>
+(async () => {
+const DATA = await fetch("data/site.json", {cache:"no-cache"}).then(r => r.ok ? r.json() : null).catch(() => null);
+const out = document.getElementById("out");
+if(!DATA){ out.innerHTML = `<p class="loading">작품 정보를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>`; return; }
+
+const listOf = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.values(v) : []);
+const entries = v => listOf(v).map(e => (e && e.data) ? { ...e.data, _file: e._file } : e).filter(Boolean);
+const clean = v => (v === undefined || v === null || (typeof v === "string" && !v.trim())) ? "" : v;
+const localPath = p => clean(p) ? String(p).replace(/^\/+/, "") : "";
+const esc = t => String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const yearKey = y => { const [a,b] = String(y ?? "").split(/[.\-\/]/); return (parseInt(a)||0)*100 + (parseInt(b)||0); };
+
+const P = (DATA.profile && typeof DATA.profile === "object") ? DATA.profile : {};
+const pv = k => String(clean(P[k])).trim();
+const nameKo = pv("name_ko") || "달연어", nameEn = pv("name_en") || "Dal Yeon-eo";
+const mail = pv("email") || "chicdotori00@gmail.com";
+const insta = (pv("instagram") || "dal_yeoneo_nook").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^@/, "").replace(/\/.*$/, "");
+
+const works = entries(DATA.works).map(r => ({
+  title: clean(r.title) || "제목 없음", year: String(clean(r.year)), cat: clean(r.cat) || "",
+  medium: clean(r.medium), w: +r.w || 0, h: +r.h || 0, d: +r.d || 0,
+  edition: clean(r.edition), number: String(clean(r.number)).trim(),
+  size: String(clean(r.size_text)).trim(), duration: clean(r.duration),
+  image: localPath(r.image), _file: r._file,
+})).sort((a,b) => (yearKey(b.year) - yearKey(a.year)) || String(b._file||"").localeCompare(String(a._file||"")));
+
+if(!works.length){ out.innerHTML = `<p class="loading">등록된 작품이 없어요.</p>`; return; }
+
+function sizeText(wk){
+  if(wk.size) return wk.size;
+  if(wk.duration) return wk.duration;
+  if(!wk.w || !wk.h) return "";
+  return wk.d ? `${wk.h} × ${wk.w} × ${wk.d} cm` : `${wk.h} × ${wk.w} cm`;
+}
+const keyOf = wk => wk.number || wk._file;
+const todayStr = () => { const d = new Date();
+  return `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,"0")}. ${String(d.getDate()).padStart(2,"0")}.`; };
+
+/* 화면에서 채우는 값 (어디에도 저장되지 않아요) */
+const state = { key: keyOf(works[0]), owner: "", date: todayStr(), place: "", sign: "" };
+
+document.getElementById("form").innerHTML = `
+  <h2>보증서 만들기</h2>
+  <p class="lead">작품을 고르고 필요한 칸을 채운 뒤 <b>PDF로 저장하기</b>를 누르세요.
+    여기에 적는 내용은 사이트에 저장되지 않고, 이 화면에서 만드는 PDF에만 들어가요.
+    이 칸은 PDF에 나오지 않아요.</p>
+  <div class="row">
+    <div class="field" style="flex:2">
+      <label for="fWork">작품</label>
+      <select id="fWork">${works.map(wk => `<option value="${esc(keyOf(wk))}">${esc(wk.title)} (${esc(wk.year)})${wk.number ? " · " + esc(wk.number) : ""}</option>`).join("")}</select>
+    </div>
+    <div class="field">
+      <label for="fOwner">소장자 (비워 두면 줄만 나와요)</label>
+      <input id="fOwner" type="text" placeholder="예: 홍길동">
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label for="fDate">발행일</label>
+      <input id="fDate" type="text" value="${esc(state.date)}">
+    </div>
+    <div class="field">
+      <label for="fPlace">발행 장소 (선택)</label>
+      <input id="fPlace" type="text" placeholder="예: 서울">
+    </div>
+    <div class="field">
+      <label for="fSign">서명 이미지 (선택)</label>
+      <input id="fSign" type="file" accept="image/*">
+      <span class="note">비워 두면 손으로 서명할 수 있게 빈 줄로 나와요.</span>
+    </div>
+  </div>`;
+
+function render(){
+  const wk = works.find(w => keyOf(w) === state.key) || works[0];
+  const size = sizeText(wk);
+  out.innerHTML = `
+  <section class="page">
+    <div class="head">
+      <p class="ko">작품 보증서</p>
+      <p class="en">Certificate of Authenticity</p>
+      <p class="artist">${esc(nameKo)}<span>${esc(nameEn)}</span></p>
+    </div>
+
+    <div class="art">${wk.image
+      ? `<img src="${esc(wk.image)}" alt="${esc(wk.title)}">`
+      : `<div class="no-photo" role="img" aria-label="${esc(wk.title)} (사진 없음)"></div>`}</div>
+
+    <div class="info">
+      <dl>
+        <dt>작품명</dt><dd><span class="title">${esc(wk.title)}</span></dd>
+        <dt>제작 연도</dt><dd>${esc(wk.year)}</dd>
+        ${wk.medium ? `<dt>재료</dt><dd>${esc(wk.medium)}</dd>` : ""}
+        ${size ? `<dt>크기</dt><dd>${esc(size)}</dd>` : ""}
+        ${wk.edition ? `<dt>에디션</dt><dd>${esc(wk.edition)}</dd>` : ""}
+        ${wk.number ? `<dt>작품 번호</dt><dd>${esc(wk.number)}</dd>` : ""}
+        <dt>소장자</dt><dd>${state.owner ? esc(state.owner) : "&nbsp;"}</dd>
+      </dl>
+    </div>
+
+    <p class="statement">
+      위 작품은 작가 ${esc(nameKo)}가 직접 제작한 원본임을 확인하며,<br>
+      이 보증서는 해당 작품에 대해 작가가 발행한 유일한 보증서입니다.
+      <span class="small">작품의 재판매나 양도 시 이 보증서를 함께 전달해 주시기 바랍니다.<br>
+      보증서를 분실한 경우 아래 연락처로 문의해 주세요.</span>
+    </p>
+
+    <div class="sign">
+      <div class="date">발행일${state.place ? " · 발행 장소" : ""}
+        <b>${esc(state.date)}${state.place ? " · " + esc(state.place) : ""}</b></div>
+      <div class="who">
+        <p class="label">작가 서명</p>
+        <div class="line">${state.sign ? `<img src="${state.sign}" alt="작가 서명">` : ""}</div>
+        <p class="name">${esc(nameKo)} <span style="font-family:var(--sans);font-size:11.5px;color:var(--muted)">${esc(nameEn)}</span></p>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span>${esc(mail)} · @${esc(insta)}</span>
+      <span>dalyeoneo-cmd.github.io/Dalyeoneo_nook</span>
+    </div>
+  </section>`;
+}
+
+document.getElementById("fWork").addEventListener("change", e => { state.key = e.target.value; render(); });
+document.getElementById("fOwner").addEventListener("input", e => { state.owner = e.target.value.trim(); render(); });
+document.getElementById("fDate").addEventListener("input", e => { state.date = e.target.value.trim(); render(); });
+document.getElementById("fPlace").addEventListener("input", e => { state.place = e.target.value.trim(); render(); });
+document.getElementById("fSign").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if(!f){ state.sign = ""; render(); return; }
+  const rd = new FileReader();
+  rd.onload = () => { state.sign = rd.result; render(); };
+  rd.readAsDataURL(f);   /* 이 화면 안에서만 쓰이고 서버로 보내지 않아요 */
+});
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+render();
+})();
+</script>
+</body>
+</html>
