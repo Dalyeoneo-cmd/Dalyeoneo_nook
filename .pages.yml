@@ -238,3 +238,70 @@ content:
       - name: inquiry
         label: 문의 가능 분야
         type: string
+
+  # ---------------- 링크 페이지 ----------------
+  - name: linkpage
+    label: 링크 페이지
+    type: file
+    path: content/linkpage.json
+    format: json
+    fields:
+      - name: name
+        label: 이름
+        type: string
+      - name: bio
+        label: 한 줄 소개
+        type: string
+      - name: photo
+        label: 프로필 사진
+        type: image
+        description: 비워 두면 노란 배경 캐릭터 그림이 들어가요.
+      - name: links
+        label: 링크 버튼
+        type: object
+        list: true
+        fields:
+          - name: visible
+            label: 페이지에 보이기
+            type: boolean
+            default: true
+          - name: title
+            label: 버튼 이름
+            type: string
+            required: true
+          - name: sub
+            label: 설명
+            type: string
+          - name: url
+            label: 주소
+            type: string
+            required: true
+          - name: shape
+            label: 아이콘 모양
+            type: select
+            options:
+              values: [동그라미, 세모, 네모]
+      - name: schedule
+        label: 일정
+        type: object
+        list: true
+        fields:
+          - name: date
+            label: 시작 날짜
+            type: date
+            required: true
+            options:
+              format: yyyy-MM-dd
+          - name: end
+            label: 끝나는 날짜
+            type: date
+            description: 기간이 있을 때만 적어요.
+            options:
+              format: yyyy-MM-dd
+          - name: title
+            label: 내용
+            type: string
+            required: true
+          - name: meta
+            label: 시간·장소
+            type: string
