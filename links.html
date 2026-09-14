@@ -216,10 +216,21 @@ function renderProfile() {
 
 /* ---------- 링크 버튼 ---------- */
 function shapeIcon(kind) {
-  const w = `<svg class="shape" viewBox="0 0 38 38" aria-hidden="true"><circle cx="19" cy="19" r="17" fill="${C.yellow}" stroke="${C.ink}" stroke-width="2.5"/>`;
-  if (kind === "세모") return w + `<path d="M12 26 L19 11 L26 26 z" fill="${C.purple}" stroke="${C.ink}" stroke-width="2" stroke-linejoin="round"/></svg>`;
-  if (kind === "네모") return w + `<rect x="12" y="12" width="14" height="14" fill="${C.red}" stroke="${C.ink}" stroke-width="2"/></svg>`;
-  return w + `<circle cx="19" cy="19" r="7" fill="${C.red}" stroke="${C.ink}" stroke-width="2"/></svg>`;
+  const I = C.ink, w = (inner) =>
+    `<svg class="shape" viewBox="0 0 38 38" aria-hidden="true">
+       <circle cx="19" cy="19" r="17" fill="${C.yellow}" stroke="${I}" stroke-width="2.5"/>${inner}</svg>`;
+  const line = `stroke="${I}" stroke-width="2" stroke-linejoin="round"`;
+  switch (kind) {
+    case "세모":   return w(`<path d="M12 26 L19 11 L26 26 z" fill="${C.purple}" ${line}/>`);
+    case "네모":   return w(`<rect x="12" y="12" width="14" height="14" fill="${C.red}" ${line}/>`);
+    case "반원":   return w(`<path d="M11 23 a8 8 0 0 1 16 0 z" fill="${C.purple}" ${line}/>`);
+    case "부채꼴": return w(`<path d="M12 26 L12 12 a14 14 0 0 1 14 14 z" fill="${C.red}" ${line}/>`);
+    case "마름모": return w(`<path d="M19 10 L28 19 L19 28 L10 19 z" fill="${C.purple}" ${line}/>`);
+    case "엑스":   return w(`<path d="M13 13 L25 25 M25 13 L13 25" stroke="${C.red}" stroke-width="4" stroke-linecap="round"/>`);
+    case "하트":   return w(`<path d="M19 27 C9 20 11 12 15.5 12 C17.6 12 19 13.8 19 15.2 C19 13.8 20.4 12 22.5 12 C27 12 29 20 19 27 z" fill="${C.red}" ${line}/>`);
+    case "도넛":   return w(`<circle cx="19" cy="19" r="8" fill="none" stroke="${C.purple}" stroke-width="4.5"/>`);
+    default:       return w(`<circle cx="19" cy="19" r="7" fill="${C.red}" ${line}/>`);
+  }
 }
 
 function esc(t) {
