@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>달연어 포트폴리오</title>
+<link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=IBM+Plex+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     포트폴리오 (PDF 저장용)
+     - 이 페이지는 사이트 어디에도 링크되어 있지 않고, 검색엔진에도 잡히지 않습니다.
+     - 작품·이력·사이트 정보는 data/site.json 을 읽어 자동으로 채워집니다.
+     - 가격은 넣지 않습니다.
+     ============================================================ */
+  :root{
+    --ink:#1E2022; --muted:#767A7E; --line:#DADCD8;
+    --sans:"IBM Plex Sans KR", system-ui, -apple-system, sans-serif;
+    --serif:"Gowun Batang", "Nanum Myeongjo", serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#8A8D88;color:var(--ink);font-family:var(--sans);font-weight:300;line-height:1.75;
+       -webkit-font-smoothing:antialiased}
+  img{max-width:100%}
+
+  /* 화면에서는 A4 종이가 놓인 것처럼 보여요 */
+  .page{width:210mm;min-height:297mm;padding:22mm 20mm;margin:0 auto 14px;background:#fff;
+        display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+  .bar{position:sticky;top:0;z-index:10;background:#2A2C2E;color:#fff;padding:14px 20px;
+       display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px}
+  .bar button{font:inherit;font-size:14px;background:#fff;color:#1E2022;border:0;border-radius:3px;
+              padding:9px 20px;cursor:pointer}
+  .bar button:hover{background:#E7E8E5}
+  .bar .hint{color:#B9BCC0;font-size:13px}
+
+  /* 표지 */
+  .cover{justify-content:center;align-items:center;text-align:center;padding-bottom:34mm}
+  .cover .name{font-family:var(--serif);font-size:30px;line-height:1.4;margin:0}
+  .cover .name span{display:block;font-family:var(--sans);font-size:15px;color:var(--muted);margin-top:8px;letter-spacing:.04em}
+  .cover .intro{font-size:14px;line-height:2.1;max-width:150mm;margin:18px auto 0;color:var(--ink);word-break:keep-all}
+  .cover .cover-art{margin:14mm 0 0;max-height:126mm}
+  .cover .cover-art img{max-height:126mm;width:auto;display:block;margin:0 auto}
+  .cover .foot{position:absolute;left:20mm;right:20mm;bottom:18mm;font-size:12px;color:var(--muted);
+               display:flex;justify-content:space-between}
+
+  h2{font-family:var(--sans);font-weight:400;font-size:15px;letter-spacing:.02em;margin:0 0 10mm;
+     padding-bottom:4mm;border-bottom:1px solid var(--line)}
+
+  .statement p{font-family:var(--serif);font-size:15px;line-height:2.1;margin:0 0 1.3em;white-space:pre-line}
+
+  /* 작품 한 장에 한 점 */
+  .work-art{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin-bottom:9mm}
+  .work-art img{max-height:180mm;width:auto;object-fit:contain}
+  .work-art .no-photo{width:110mm;height:140mm;background:#EDEEEB}
+  .cap .t{font-family:var(--serif);font-size:17px;line-height:1.5;margin:0 0 3px}
+  .cap .t i{font-style:normal;font-family:var(--sans);font-size:13px;color:var(--muted)}
+  .cap p{margin:0;font-size:13px;color:var(--muted);line-height:1.85}
+  .cap .desc{margin-top:6px;color:var(--ink);font-size:13px;max-width:150mm}
+  .cap .shown{margin-top:6px;font-size:12px}
+
+  /* 이력 */
+  .cv-group{margin-bottom:11mm;break-inside:avoid}
+  .page.flow{min-height:0}          /* 이력처럼 길이가 늘어나는 쪽 */
+  .cv-group h3{font-size:13px;font-weight:500;margin:0 0 4mm}
+  .cv-list{list-style:none;margin:0;padding:0;font-size:12.5px}
+  .cv-list li{display:grid;grid-template-columns:16mm 1fr;gap:4mm;padding:2.5mm 0;
+              border-top:1px solid var(--line);line-height:1.65;break-inside:avoid}
+  .cv-list .y{color:var(--muted);font-variant-numeric:tabular-nums}
+  .cv-list .title{display:block}
+  .cv-list .place{display:block;color:var(--muted);font-size:11.5px;margin-top:1px}
+  .cv-list.edu li{grid-template-columns:16mm 9mm 9mm 1fr;gap:3mm}
+
+  .contact{font-size:13px}
+  .contact dt{color:var(--muted);font-size:12px;margin-top:6mm}
+  .contact dd{margin:2px 0 0}
+  .contact a{color:inherit}
+
+  .loading{padding:40mm 0;text-align:center;color:var(--muted);font-size:14px}
+
+  /* 인쇄 / PDF 저장 */
+  @page{size:A4;margin:0}
+  @media print{
+    body{background:#fff}
+    .bar{display:none}
+    .page{margin:0;box-shadow:none;page-break-after:always;break-after:page}
+    .page:last-child{page-break-after:auto;break-after:auto}
+  }
+  @media screen{
+    .page{box-shadow:0 10px 30px -18px rgba(0,0,0,.5)}
+  }
+  /* 좁은 화면에서도 읽을 수 있게 */
+  @media screen and (max-width:230mm){
+    .page{width:100%;min-height:0;padding:28px 22px}
+    .cover{padding-top:60px}
+    .cover .foot{position:static;margin-top:40px}
+    .work-art img,.cover .cover-art img{max-height:60vh}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <button type="button" id="printBtn">PDF로 저장하기</button>
+  <span class="hint">저장 창이 열리면 프린터를 ‘PDF로 저장’으로 고르세요.</span>
+</div>
+
+<div id="out"><p class="loading">포트폴리오를 준비하고 있어요…</p></div>
+
+<script>
+(async () => {
+const DATA = await fetch("data/site.json", {cache:"no-cache"}).then(r => r.ok ? r.json() : null).catch(() => null);
+const out = document.getElementById("out");
+if(!DATA){ out.innerHTML = `<p class="loading">작품 정보를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>`; return; }
+
+const listOf = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.values(v) : []);
+const entries = v => listOf(v).map(e => (e && e.data) ? { ...e.data, _file: e._file } : e).filter(Boolean);
+const clean = v => (v === undefined || v === null || (typeof v === "string" && !v.trim())) ? "" : v;
+const localPath = p => clean(p) ? String(p).replace(/^\/+/, "") : "";
+const esc = t => String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const yearKey = y => { const [a,b] = String(y ?? "").split(/[.\-\/]/); return (parseInt(a)||0)*100 + (parseInt(b)||0); };
+const byYearDesc = (a,b) => (yearKey(b._y) - yearKey(a._y)) || String(b._file||"").localeCompare(String(a._file||""));
+
+const P = (DATA.profile && typeof DATA.profile === "object") ? DATA.profile : {};
+const pv = k => String(clean(P[k])).trim();
+const nameKo = pv("name_ko") || "달연어", nameEn = pv("name_en") || "Dal Yeon-eo";
+
+/* ---------- 작품 ---------- */
+const works = entries(DATA.works).map(r => {
+  const wk = {
+    title: clean(r.title) || "제목 없음", year: String(clean(r.year)), cat: clean(r.cat) || "회화",
+    medium: clean(r.medium), w: +r.w || 0, h: +r.h || 0, d: +r.d || 0,
+    edition: clean(r.edition), desc: clean(r.desc), number: String(clean(r.number)).trim(),
+    size: String(clean(r.size_text)).trim(), duration: clean(r.duration),
+    image: localPath(r.image), featured: r.featured === true || r.featured === "true",
+    exhibited: listOf(r.exhibited).map(x => String(x).trim()).filter(Boolean),
+  };
+  wk._y = wk.year; wk._file = r._file;
+  return wk;
+}).sort(byYearDesc);
+const fi = works.findIndex(w => w.featured);
+if(fi > 0) works.unshift(works.splice(fi, 1)[0]);
+
+/* ---------- 전시·학력 ---------- */
+const shows = entries(DATA.exhibitions).map(r => ({
+  y: String(clean(r.year)), title: clean(r.title) || "", place: clean(r.place), city: clean(r.city),
+  type: clean(r.type), _y: String(clean(r.year)), _file: r._file,
+})).sort(byYearDesc);
+const cv = [
+  { group:"학력", items: entries(DATA.education).map(r => ({
+      y: String(clean(r.year)), status: clean(r.status), degree: clean(r.degree),
+      title: clean(r.school), _y: String(clean(r.year)), _file: r._file,
+    })).sort(byYearDesc) },
+  { group:"개인전", items: shows.filter(s => s.type === "개인전") },
+  { group:"기획・그룹전", items: shows.filter(s => s.type !== "개인전") },
+];
+const findShow = key => shows.find(s => s.title && key && s.title.includes(key));
+
+/* ---------- 조각들 ---------- */
+function sizeText(wk){
+  if(wk.size) return wk.size;
+  if(wk.duration) return wk.duration;
+  if(!wk.w || !wk.h) return "";
+  return wk.d ? `${wk.h} × ${wk.w} × ${wk.d} cm` : `${wk.h} × ${wk.w} cm`;
+}
+function capHTML(wk){
+  const size = sizeText(wk);
+  const ex = wk.exhibited.map(k => { const it = findShow(k); return it ? `${it.title}${it.y ? ` (${it.y})` : ""}` : k; });
+  return `<div class="cap">
+    <p class="t">${esc(wk.title)}, <i>${esc(wk.year)}</i></p>
+    ${wk.medium ? `<p>${esc(wk.medium)}</p>` : ""}
+    ${size ? `<p>${esc(size)}</p>` : ""}
+    ${wk.edition ? `<p>${esc(wk.edition)}</p>` : ""}
+    ${wk.desc ? `<p class="desc">${esc(wk.desc)}</p>` : ""}
+    ${ex.length ? `<p class="shown">출품 전시 ${ex.map(esc).join(" / ")}</p>` : ""}
+  </div>`;
+}
+/* 소개 문구는 '질문을' 뒤에서 줄을 바꿔요. 그 말이 없으면 한 줄로 흘러가요. */
+function introHTML(t){
+  const at = t.indexOf("질문을");
+  if(at < 0) return esc(t);
+  const cut = at + "질문을".length;
+  return esc(t.slice(0, cut)) + "<br>" + esc(t.slice(cut).replace(/^\s+/, ""));
+}
+const artHTML = wk => wk.image
+  ? `<img src="${esc(wk.image)}" alt="${esc(wk.title)}">`
+  : `<div class="no-photo" role="img" aria-label="${esc(wk.title)} (사진 없음)"></div>`;
+
+/* ---------- 쪽 만들기 ---------- */
+const pages = [];
+
+/* 표지 */
+const cover = works[0];
+pages.push(`<section class="page cover">
+  <h1 class="name">${esc(nameKo)}<span>${esc(nameEn)}</span></h1>
+  ${pv("intro") ? `<p class="intro">${introHTML(pv("intro"))}</p>` : ""}
+  ${cover ? `<div class="cover-art">${artHTML(cover)}</div>` : ""}
+  <div class="foot"><span>Portfolio</span><span id="coverDate"></span></div>
+</section>`);
+
+/* 작가 노트 */
+if(pv("statement")){
+  const paras = pv("statement").replace(/\r\n?/g, "\n").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  pages.push(`<section class="page">
+    <h2>작가 노트</h2>
+    <div class="statement">${paras.map(p => `<p>${esc(p)}</p>`).join("")}</div>
+  </section>`);
+}
+
+/* 작품 (한 장에 한 점) */
+works.forEach(wk => {
+  pages.push(`<section class="page">
+    <div class="work-art">${artHTML(wk)}</div>
+    ${capHTML(wk)}
+  </section>`);
+});
+
+/* 이력 + 연락 */
+const cvHTML = cv.filter(g => g.items.length).map(g => {
+  const edu = g.items.some(it => it.status || it.degree);
+  if(edu){
+    return `<div class="cv-group"><h3>${g.group}</h3><ul class="cv-list edu">
+      ${g.items.map(it => `<li><span class="y">${esc(it.y)}</span><span>${esc(it.status||"")}</span><span>${esc(it.degree||"")}</span><span class="title">${esc(it.title)}</span></li>`).join("")}
+    </ul></div>`;
+  }
+  return `<div class="cv-group"><h3>${g.group}</h3><ul class="cv-list">
+    ${g.items.map((it,i) => {
+      const same = i > 0 && g.items[i-1].y === it.y;
+      const where = [it.place, it.city].filter(Boolean).join(", ");
+      return `<li><span class="y">${same ? "" : esc(it.y)}</span><span><span class="title">${esc(it.title)}</span>${where ? `<span class="place">${esc(where)}</span>` : ""}</span></li>`;
+    }).join("")}
+  </ul></div>`;
+}).join("");
+
+const mail = pv("email") || "chicdotori00@gmail.com";
+const insta = (pv("instagram") || "dal_yeoneo_nook").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^@/, "").replace(/\/.*$/, "");
+pages.push(`<section class="page flow">
+  <h2>이력</h2>
+  ${cvHTML || `<p class="loading">이력이 아직 없습니다.</p>`}
+</section>`);
+
+pages.push(`<section class="page">
+  <h2>연락</h2>
+  <dl class="contact">
+    <dt>이메일</dt><dd><a href="mailto:${esc(mail)}">${esc(mail)}</a></dd>
+    <dt>인스타그램</dt><dd><a href="https://www.instagram.com/${encodeURIComponent(insta)}/">@${esc(insta)}</a></dd>
+    <dt>웹사이트</dt><dd><a href="https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/">dalyeoneo-cmd.github.io/Dalyeoneo_nook</a></dd>
+  </dl>
+  <p style="margin-top:14mm;font-size:11.5px;color:var(--muted)">© ${new Date().getFullYear()} ${esc(nameKo)} ${esc(nameEn)}. 모든 작품 이미지의 저작권은 작가에게 있습니다.</p>
+</section>`);
+
+out.innerHTML = pages.join("");
+
+const d = new Date();
+document.getElementById("coverDate").textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}`;
+document.title = `${nameKo} 포트폴리오 ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}`;
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+})();
+</script>
+</body>
+</html>
