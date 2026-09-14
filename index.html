@@ -6,6 +6,20 @@
 <title>달연어 Dal Yeon-eo</title>
 <meta name="description" content="작가 달연어(Dal Yeon-eo)의 회화, 디지털 드로잉, 영상, 입체 작업과 전시 이력">
 <link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="canonical" href="https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/">
+<!-- 카카오톡·인스타그램 등에 링크를 보낼 때 보이는 미리보기.
+     그림을 바꾸려면 images/share.jpg 를 같은 이름의 새 그림으로 바꿔 올리세요(가로로 긴 1200×630 권장). -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="달연어 Dal Yeon-eo">
+<meta property="og:title" content="달연어 Dal Yeon-eo">
+<meta property="og:description" content="말로 다 담을 수 없는 내밀한 감정과 존재론적 질문을 물감의 물성으로 캔버스에 옮기는 작업을 한다.">
+<meta property="og:url" content="https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/">
+<meta property="og:image" content="https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/images/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="달연어의 회화 「말로: 빛의 종착지」">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=IBM+Plex+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
@@ -753,7 +767,23 @@ const viewer=document.getElementById("viewer");
 let vIndex=0;
 function visibleIndexes(){ return works.map((w,i)=>i).filter(i=>currentCat==="전체"||works[i].cat===currentCat); }
 const vArt=document.getElementById("vArt");
-function openViewer(i){ vIndex=i; if(!viewer.open) viewer.showModal(); renderViewer(); }
+/* 작품마다 주소가 생겨요. 작품 번호가 있으면 번호를, 없으면 저장된 이름을 써요.
+   예: ...Dalyeoneo_nook/#Dp-2026-001 — 이 주소를 보내면 상대방 화면에서 그 작품이 바로 열려요. */
+const workKey = wk => String((wk && (wk.number || wk._file)) || "").trim();
+function openViewer(i, fromHash){
+  vIndex=i; if(!viewer.open) viewer.showModal(); renderViewer();
+  const key=workKey(works[i]);
+  if(fromHash || !key) return;
+  const hash="#"+encodeURIComponent(key);
+  if(location.hash !== hash) history.pushState({work:key}, "", hash);
+}
+function syncFromHash(){
+  const key=decodeURIComponent(location.hash.slice(1));
+  const i=key ? works.findIndex(w=>workKey(w)===key) : -1;
+  if(i>=0) openViewer(i, true);
+  else if(viewer.open) viewer.close(true);
+}
+window.addEventListener("popstate", syncFromHash);
 function fitViewer(){
   const art=vArt.querySelector(".art"); if(!art) return;
   const r=ratioOf(works[vIndex]), bw=vArt.clientWidth, bh=vArt.clientHeight;
@@ -781,11 +811,17 @@ function renderViewer(){
 function step(dir){
   const list=visibleIndexes(); let pos=list.indexOf(vIndex);
   if(pos<0) pos=0;
-  vIndex=list[(pos+dir+list.length)%list.length]; renderViewer();
+  openViewer(list[(pos+dir+list.length)%list.length]);
 }
 document.getElementById("vPrev").onclick=()=>step(-1);
 document.getElementById("vNext").onclick=()=>step(1);
+const closeViewer=viewer.close.bind(viewer);
+viewer.close=function(fromHash){          /* 닫으면 주소도 원래대로 */
+  closeViewer();
+  if(!fromHash && location.hash) history.pushState({}, "", location.pathname + location.search);
+};
 document.getElementById("vClose").onclick=()=>viewer.close();
+viewer.addEventListener("cancel",()=>{ if(location.hash) history.pushState({}, "", location.pathname + location.search); });
 viewer.addEventListener("keydown",e=>{ if(e.key==="ArrowRight") step(1); if(e.key==="ArrowLeft") step(-1); });
 
 document.getElementById("vShows").addEventListener("click",e=>{ const s=e.target.closest("button[data-show]"); if(s) openShow(s.dataset.show); });
@@ -848,6 +884,9 @@ document.getElementById("sendBtn").addEventListener("click",()=>{
   const text=`${body}\n\n보낸 사람: ${name||"-"}\n회신 이메일: ${mail||"-"}`;
   location.href=`mailto:${TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
 });
+/* 주소에 적힌 작품이 있으면 바로 열기 (모든 준비가 끝난 뒤) */
+if(location.hash) syncFromHash();
+
 })();
 </script>
 </body>
