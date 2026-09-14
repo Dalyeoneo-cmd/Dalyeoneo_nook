@@ -80,6 +80,28 @@
   .contact dd{margin:2px 0 0}
   .contact a{color:inherit}
 
+  .cap .link{margin-top:6px;font-size:12px}
+  .cap .link a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+
+  /* 작품 고르기 (화면에서만 보이고 PDF에는 안 나와요) */
+  .picker{max-width:210mm;margin:0 auto 14px;background:#fff;padding:18px 20px 20px}
+  .picker h2{font-size:14px;font-weight:500;margin:0 0 4px;padding:0;border:0}
+  .picker .lead{font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.7}
+  .picker .cats{display:flex;flex-wrap:wrap;gap:18px}
+  .picker .cat{min-width:150px;flex:1}
+  .picker .cat h3{font-size:12.5px;font-weight:500;margin:0 0 6px;color:var(--muted)}
+  .picker label{display:flex;gap:7px;align-items:flex-start;font-size:12.5px;line-height:1.6;
+                padding:3px 0;cursor:pointer}
+  .picker label input{margin:4px 0 0}
+  .picker label .yr{color:var(--muted);font-size:11.5px}
+  .picker .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px;
+                border-top:1px solid var(--line);padding-top:14px}
+  .picker .acts button{font:inherit;font-size:12.5px;background:#fff;border:1px solid var(--line);
+                       border-radius:3px;padding:7px 14px;cursor:pointer}
+  .picker .acts button:hover{border-color:#8A8D88}
+  .picker .picked{font-size:12.5px;color:var(--muted);margin-left:auto}
+  @media print{ .picker{display:none} }
+
   .loading{padding:40mm 0;text-align:center;color:var(--muted);font-size:14px}
 
   /* 인쇄 / PDF 저장 */
@@ -109,6 +131,7 @@
   <span class="hint">저장 창이 열리면 프린터를 ‘PDF로 저장’으로 고르세요.</span>
 </div>
 
+<div class="picker" id="picker"></div>
 <div id="out"><p class="loading">포트폴리오를 준비하고 있어요…</p></div>
 
 <script>
@@ -137,6 +160,7 @@ const works = entries(DATA.works).map(r => {
     edition: clean(r.edition), desc: clean(r.desc), number: String(clean(r.number)).trim(),
     size: String(clean(r.size_text)).trim(), duration: clean(r.duration),
     image: localPath(r.image), featured: r.featured === true || r.featured === "true",
+    video: String(clean(r.video)).trim(),
     exhibited: listOf(r.exhibited).map(x => String(x).trim()).filter(Boolean),
   };
   wk._y = wk.year; wk._file = r._file;
@@ -177,8 +201,12 @@ function capHTML(wk){
     ${wk.edition ? `<p>${esc(wk.edition)}</p>` : ""}
     ${wk.desc ? `<p class="desc">${esc(wk.desc)}</p>` : ""}
     ${ex.length ? `<p class="shown">출품 전시 ${ex.map(esc).join(" / ")}</p>` : ""}
+    ${wk.video ? `<p class="link">영상 보기 <a href="${esc(wk.video)}">${esc(shortUrl(wk.video))}</a></p>` : ""}
   </div>`;
 }
+/* 영상 주소는 보기 좋게 줄여서 보여주고, 누르면 그 주소로 가요 */
+function shortUrl(u){ return String(u).replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, ""); }
+
 /* 소개 문구는 '질문을' 뒤에서 줄을 바꿔요. 그 말이 없으면 한 줄로 흘러가요. */
 function introHTML(t){
   const at = t.indexOf("질문을");
@@ -190,11 +218,78 @@ const artHTML = wk => wk.image
   ? `<img src="${esc(wk.image)}" alt="${esc(wk.title)}">`
   : `<div class="no-photo" role="img" aria-label="${esc(wk.title)} (사진 없음)"></div>`;
 
+/* ---------- 어떤 작품을 넣을지 고르기 ----------
+   처음 열면 분류마다 최근 작품이 자동으로 골라져요(회화 4점, 나머지 3점).
+   고른 내용은 주소에 담겨서, 용도별로 즐겨찾기에 저장해 둘 수 있어요. */
+const CAT_ORDER = ["회화", "입체", "디지털 드로잉", "그래픽", "미디어 영상"];
+const DEFAULT_MAX = { "회화": 4 };
+const MAX_ETC = 3;
+const keyOf = wk => wk.number || wk._file || wk.title;
+
+function defaultPicked(){
+  const count = {};
+  return works.filter(wk => {
+    const max = DEFAULT_MAX[wk.cat] || MAX_ETC;
+    count[wk.cat] = (count[wk.cat] || 0) + 1;
+    return count[wk.cat] <= max;
+  }).map(keyOf);
+}
+function readPicked(){
+  const q = new URLSearchParams(location.search).get("w");
+  if(q === null) return defaultPicked();
+  if(!q.trim()) return [];
+  const want = q.split(",").map(x => decodeURIComponent(x.trim())).filter(Boolean);
+  return works.filter(wk => want.includes(keyOf(wk))).map(keyOf);
+}
+let picked = new Set(readPicked());
+
+function saveToUrl(){
+  const q = [...picked].map(encodeURIComponent).join(",");
+  history.replaceState({}, "", location.pathname + (q ? "?w=" + q : "?w="));
+}
+
+/* ---------- 고르는 칸 그리기 ---------- */
+function renderPicker(){
+  const cats = CAT_ORDER.filter(c => works.some(wk => wk.cat === c));
+  document.getElementById("picker").innerHTML = `
+    <h2>포트폴리오에 넣을 작품</h2>
+    <p class="lead">보낼 곳에 맞게 골라 주세요. 고른 내용은 주소에 저장돼요.
+      자주 쓰는 조합은 그 주소를 즐겨찾기에 넣어 두면 다음에 그대로 열려요.
+      이 칸은 PDF에는 나오지 않아요.</p>
+    <div class="cats">
+      ${cats.map(c => `<div class="cat"><h3>${esc(c)}</h3>
+        ${works.filter(wk => wk.cat === c).map(wk => `
+          <label><input type="checkbox" value="${esc(keyOf(wk))}"${picked.has(keyOf(wk)) ? " checked" : ""}>
+          <span>${esc(wk.title)} <span class="yr">${esc(wk.year)}</span></span></label>`).join("")}
+      </div>`).join("")}
+    </div>
+    <div class="acts">
+      <button type="button" data-act="default">기본으로 (회화 4, 나머지 3)</button>
+      <button type="button" data-act="all">모두 넣기</button>
+      <button type="button" data-act="none">모두 빼기</button>
+      <span class="picked">고른 작품 ${picked.size} / ${works.length}</span>
+    </div>`;
+}
+document.getElementById("picker").addEventListener("change", e => {
+  const box = e.target.closest("input[type=checkbox]"); if(!box) return;
+  if(box.checked) picked.add(box.value); else picked.delete(box.value);
+  saveToUrl(); renderPicker(); renderPages();
+});
+document.getElementById("picker").addEventListener("click", e => {
+  const b = e.target.closest("button[data-act]"); if(!b) return;
+  if(b.dataset.act === "default") picked = new Set(defaultPicked());
+  if(b.dataset.act === "all") picked = new Set(works.map(keyOf));
+  if(b.dataset.act === "none") picked = new Set();
+  saveToUrl(); renderPicker(); renderPages();
+});
+
 /* ---------- 쪽 만들기 ---------- */
+function renderPages(){
+const chosen = works.filter(wk => picked.has(keyOf(wk)));
 const pages = [];
 
-/* 표지 */
-const cover = works[0];
+/* 표지: 고른 작품 중 대표작, 없으면 첫 작품 */
+const cover = chosen.find(wk => wk.featured) || chosen[0];
 pages.push(`<section class="page cover">
   <h1 class="name">${esc(nameKo)}<span>${esc(nameEn)}</span></h1>
   ${pv("intro") ? `<p class="intro">${introHTML(pv("intro"))}</p>` : ""}
@@ -212,14 +307,14 @@ if(pv("statement")){
 }
 
 /* 작품 (한 장에 한 점) */
-works.forEach(wk => {
+chosen.forEach(wk => {
   pages.push(`<section class="page">
     <div class="work-art">${artHTML(wk)}</div>
     ${capHTML(wk)}
   </section>`);
 });
 
-/* 이력 + 연락 */
+/* 이력 */
 const cvHTML = cv.filter(g => g.items.length).map(g => {
   const edu = g.items.some(it => it.status || it.degree);
   if(edu){
@@ -258,6 +353,11 @@ out.innerHTML = pages.join("");
 const d = new Date();
 document.getElementById("coverDate").textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}`;
 document.title = `${nameKo} 포트폴리오 ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+
+saveToUrl();
+renderPicker();
+renderPages();
 document.getElementById("printBtn").addEventListener("click", () => window.print());
 })();
 </script>
