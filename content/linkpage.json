@@ -1,0 +1,29 @@
+{
+  "name": "달연어",
+  "bio": "그림 그리고 기록해요",
+  "photo": "",
+  "links": [
+    {
+      "visible": true,
+      "title": "달연어 작가 홈페이지",
+      "sub": "작가 소개와 작업 모음",
+      "url": "https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/",
+      "shape": "동그라미"
+    },
+    {
+      "visible": true,
+      "title": "달연어 유튜브",
+      "sub": "영상 작업, 작업 과정, 그리고 취미 활동",
+      "url": "https://youtube.com/",
+      "shape": "세모"
+    }
+  ],
+  "schedule": [
+    {
+      "date": "2026-09-01",
+      "end": "2026-09-07",
+      "title": "《빛의 감각 展》",
+      "meta": "레온갤러리 성수HQ"
+    }
+  ]
+}
