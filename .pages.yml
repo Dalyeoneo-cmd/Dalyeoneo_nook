@@ -280,7 +280,7 @@ content:
             label: 아이콘 모양
             type: select
             options:
-              values: [동그라미, 세모, 네모]
+              values: [동그라미, 세모, 네모, 반원, 부채꼴, 마름모, 엑스, 하트, 도넛]
       - name: schedule
         label: 일정
         type: object
