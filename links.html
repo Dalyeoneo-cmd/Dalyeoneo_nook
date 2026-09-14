@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>달연어</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gaegu:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FFF8DC;   /* 도화지 크림 */
+    --yellow: #F3C717;  /* 프로필 배경 노랑 */
+    --ink: #1C1A17;     /* 크레용 검정 */
+    --red: #D90000;     /* 하트 빨강 */
+    --purple: #6A1FD0;  /* 눈 보라 */
+    --mist: #F0E3B0;
+    --muted: #6E6450;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "IBM Plex Sans KR", system-ui, sans-serif;
+    color: var(--ink);
+    background-color: var(--paper);
+    background-image: radial-gradient(var(--mist) 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  .page { max-width: 440px; margin: 0 auto; padding-bottom: 48px; }
+
+  /* 상단 기하학 패턴 (크레용 질감) */
+  .band { display: block; width: 100%; height: auto; background: var(--yellow); border-bottom: 3px solid var(--ink); }
+
+  /* 프로필 */
+  .profile { text-align: center; padding: 0 24px; margin-top: -68px; position: relative; }
+  .avatar {
+    width: 136px; height: 136px; border-radius: 50%;
+    border: 4px solid var(--ink); background: var(--yellow);
+    display: grid; place-items: center; margin: 0 auto 12px; overflow: hidden;
+    font-family: "Black Han Sans", sans-serif; font-size: 44px;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  h1 { font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 32px; line-height: 1.2; }
+  .bio { font-family: "Gaegu", cursive; font-weight: 700; font-size: 20px; color: var(--muted); margin-top: 4px; }
+
+  .content { padding: 26px 24px 0; display: flex; flex-direction: column; gap: 12px; }
+
+  /* 월별 일정: 인형 바느질처럼 점선 스티치 */
+  .schedule {
+    position: relative; background: #fff; border: 3px solid var(--ink); border-radius: 28px;
+    padding: 18px 18px 14px; margin-bottom: 6px;
+  }
+  .schedule::before {
+    content: ""; position: absolute; inset: 7px; border: 2px dashed var(--ink);
+    border-radius: 21px; opacity: .35; pointer-events: none;
+  }
+  .sched-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; position: relative; }
+  .sched-head h2 { font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 22px; }
+  .month-nav { display: flex; gap: 8px; }
+  .month-nav button {
+    width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--ink);
+    background: var(--yellow); font-size: 16px; font-weight: 700; cursor: pointer; color: var(--ink);
+  }
+  .month-nav button:hover { background: #fff; }
+  .month-nav button:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+  .events { list-style: none; position: relative; }
+  .events li { display: flex; align-items: stretch; gap: 10px; padding: 9px 0; border-top: 2px dashed var(--mist); }
+  .events li > div:last-child { align-self: center; }
+  .events li:first-child { border-top: none; }
+
+  /* 가로형 날짜 + 상태 색 막대 */
+  .daycol {
+    width: 40px; flex-shrink: 0; display: flex; align-items: baseline;
+    justify-content: flex-end; gap: 3px;
+  }
+  .daycol .d { font-family: "Black Han Sans", sans-serif; font-size: 21px; line-height: 1; }
+  .daycol .w { font-size: 11px; color: var(--muted); }
+  .bar { width: 5px; align-self: stretch; border-radius: 3px; background: var(--yellow); flex-shrink: 0; }
+  .ing .bar { background: var(--red); }
+  .done .bar { background: #DCD6C6; }
+  .done .daycol .d, .done .ev-title { color: #9A9380; }
+  .done .daycol .w, .done .ev-meta { color: #B0A995; }
+  .ev-title { font-weight: 600; font-size: 15px; line-height: 1.35; }
+  .ev-period { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .done .ev-period { color: #A79F8C; }
+  .ev-meta { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .tag {
+    display: inline-block; margin-left: 6px; vertical-align: middle;
+    background: var(--red); color: #fff; border-radius: 999px;
+    font-size: 10px; font-weight: 600; padding: 1px 7px;
+  }
+  .tag.soon { background: var(--purple); }
+  .empty { font-family: "Gaegu", cursive; font-size: 18px; color: var(--muted); padding: 6px 0; }
+
+  /* 링크 버튼 */
+  .links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .pill {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    padding: 12px 22px 12px 12px; border-radius: 999px;
+    background: #fff; border: 3px solid var(--ink); color: var(--ink);
+    font: 600 16px/1.3 "IBM Plex Sans KR", sans-serif; text-decoration: none;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .pill:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--red); }
+  .pill:active { transform: none; box-shadow: none; }
+  .pill:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
+  .pill { -webkit-tap-highlight-color: rgba(0,0,0,.08); touch-action: manipulation; }
+  .pill .label, .pill .sub, .pill .shape { pointer-events: none; user-select: none; }
+  .pill .label { flex: 1; }
+  .pill .sub { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
+  .shape { width: 38px; height: 38px; flex-shrink: 0; }
+
+  footer { text-align: center; font-family: "Gaegu", cursive; font-size: 16px; color: var(--muted); margin-top: 36px; }
+
+  @media (prefers-reduced-motion: reduce) { .pill { transition: none; } }
+
+</style>
+</head>
+<body>
+<div class="page">
+  <svg class="band" id="band" viewBox="0 0 440 176" role="img" aria-label="기하학 패턴 배너"></svg>
+
+  <header class="profile">
+    <div class="avatar" id="avatar"></div>
+    <h1 id="name"></h1>
+    <p class="bio" id="bio"></p>
+  </header>
+
+  <main class="content">
+    <section class="schedule" aria-labelledby="monthTitle">
+      <div class="sched-head">
+        <h2 id="monthTitle"></h2>
+        <div class="month-nav">
+          <button id="prev" aria-label="이전 달">‹</button>
+          <button id="next" aria-label="다음 달">›</button>
+        </div>
+      </div>
+      <ul class="events" id="events"></ul>
+    </section>
+
+    <ul class="links" id="links"></ul>
+  </main>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+/* ============================================================
+   달연어 링크 페이지
+   내용은 관리 화면(app.pagescms.org)의 "링크 페이지"에서 고쳐요.
+   이 파일은 content/linkpage.json 을 읽어서 화면에 그리기만 해요.
+   ============================================================ */
+
+const C = { yellow: "#F3C717", red: "#D90000", purple: "#6A1FD0", white: "#FFFFFF", ink: "#1C1A17" };
+const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+/* 내용을 못 불러왔을 때 보여줄 기본값 */
+let PROFILE = { name: "달연어", bio: "", photo: "" };
+let LINKS = [];
+let SCHEDULE = [];
+
+/* 이 사이트는 주소가 /Dalyeoneo_nook/ 아래에 있어서,
+   관리 화면이 저장한 /images/... 주소를 여기에 맞게 바꿔줘요. */
+const BASE = location.pathname.replace(/[^/]*$/, "");
+function resolve(u) {
+  if (!u) return "";
+  if (/^(https?:)?\/\//.test(u) || u.startsWith("data:")) return u;
+  return BASE + u.replace(/^\//, "");
+}
+
+/* ---------- 상단 기하학 패턴 ---------- */
+function drawBand() {
+  const svg = document.getElementById("band");
+  const S = 44, cols = 10, rows = 4;
+  let seed = 11;
+  const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const fills = [C.red, C.purple, C.white, C.white, C.yellow, C.ink];
+  const st = `stroke="${C.ink}" stroke-width="3" stroke-linejoin="round"`;
+  let out = `<defs><filter id="crayon" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.6"/></filter></defs><g filter="url(#crayon)">`;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * S, y = r * S, cx = x + S / 2, cy = y + S / 2;
+      const f = fills[Math.floor(rand() * fills.length)];
+      const rot = Math.floor(rand() * 4) * 90;
+      const t = Math.floor(rand() * 10);
+      let sh = "";
+      if (t === 0) sh = `<path d="M${x+4} ${y+4} h${S-8} a${S-8} ${S-8} 0 0 1 ${-(S-8)} ${S-8} z" fill="${f}" ${st}/>`;
+      else if (t === 1) sh = `<path d="M${x+4} ${cy+6} a${S/2-4} ${S/2-4} 0 0 1 ${S-8} 0 z" fill="${f}" ${st}/>`;
+      else if (t === 2) sh = `<path d="M${x+6} ${y+S-6} L${cx} ${y+6} L${x+S-6} ${y+S-6} z" fill="${f}" ${st}/>`;
+      else if (t === 3) sh = `<circle cx="${cx}" cy="${cy}" r="${S/2-8}" fill="${f}" ${st}/>`;
+      else if (t === 4) sh = `<rect x="${x+10}" y="${y+10}" width="${S-20}" height="${S-20}" fill="none" stroke="${f === C.yellow || f === C.white ? C.ink : f}" stroke-width="4"/>`;
+      else if (t === 6) sh = `<circle cx="${cx}" cy="${cy}" r="${S/2-8}" fill="${f === C.yellow ? C.white : f}" ${st}/>`;
+      else if (t === 5) sh = `<path d="M${x+13} ${y+13} L${x+S-13} ${y+S-13} M${x+S-13} ${y+13} L${x+13} ${y+S-13}" stroke="${f === C.yellow || f === C.white ? C.red : f}" stroke-width="4.5" stroke-linecap="round"/>`;
+      out += `<g transform="rotate(${rot} ${cx} ${cy})">${sh}</g>`;
+    }
+  }
+  svg.innerHTML = out + "</g>";
+}
+
+/* ---------- 프로필 ---------- */
+function renderProfile() {
+  document.getElementById("name").textContent = PROFILE.name || "";
+  document.getElementById("bio").textContent = PROFILE.bio || "";
+  const av = document.getElementById("avatar");
+  const src = resolve(PROFILE.photo) || BASE + "images/favicon.png";
+  av.innerHTML = `<img src="${src}" alt="${PROFILE.name || ""} 프로필 그림">`;
+  av.querySelector("img").addEventListener("error", () => {
+    av.textContent = (PROFILE.name || "?").charAt(0);
+  });
+  document.title = PROFILE.name || "링크";
+  document.getElementById("footer").textContent = "© " + new Date().getFullYear() + " " + (PROFILE.name || "");
+}
+
+/* ---------- 링크 버튼 ---------- */
+function shapeIcon(kind) {
+  const w = `<svg class="shape" viewBox="0 0 38 38" aria-hidden="true"><circle cx="19" cy="19" r="17" fill="${C.yellow}" stroke="${C.ink}" stroke-width="2.5"/>`;
+  if (kind === "세모") return w + `<path d="M12 26 L19 11 L26 26 z" fill="${C.purple}" stroke="${C.ink}" stroke-width="2" stroke-linejoin="round"/></svg>`;
+  if (kind === "네모") return w + `<rect x="12" y="12" width="14" height="14" fill="${C.red}" stroke="${C.ink}" stroke-width="2"/></svg>`;
+  return w + `<circle cx="19" cy="19" r="7" fill="${C.red}" stroke="${C.ink}" stroke-width="2"/></svg>`;
+}
+
+function esc(t) {
+  return String(t == null ? "" : t)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function renderLinks() {
+  document.getElementById("links").innerHTML = LINKS
+    .filter(l => l && l.visible !== false && l.url)
+    .map(l => `<li><a class="pill" href="${esc(l.url)}" target="_blank" rel="noopener">
+      ${shapeIcon(l.shape)}<span class="label">${esc(l.title)}${l.sub ? `<span class="sub">${esc(l.sub)}</span>` : ""}</span></a></li>`)
+    .join("");
+}
+
+/* ---------- 월별 일정 ---------- */
+const today = new Date();
+let viewY = today.getFullYear(), viewM = today.getMonth();
+
+function d10(v) { return typeof v === "string" ? v.slice(0, 10) : ""; }
+function endOf(e) { const en = d10(e.end); return en && en >= d10(e.date) ? en : d10(e.date); }
+
+function renderMonth() {
+  document.getElementById("monthTitle").textContent = `${viewY}년 ${viewM + 1}월 일정`;
+  const mm = String(viewM + 1).padStart(2, "0");
+  const first = `${viewY}-${mm}-01`, last = `${viewY}-${mm}-31`;
+  const list = SCHEDULE
+    .filter(e => e && d10(e.date) && d10(e.date) <= last && endOf(e) >= first)
+    .sort((a, b) => d10(a.date).localeCompare(d10(b.date)));
+
+  const ul = document.getElementById("events");
+  if (!list.length) { ul.innerHTML = `<li class="empty">이 달에는 등록된 일정이 없어요.</li>`; return; }
+
+  const todayISO = new Date().toISOString().slice(0, 10);
+  ul.innerHTML = list.map(e => {
+    const s0 = new Date(d10(e.date) + "T00:00:00"), e0 = new Date(endOf(e) + "T00:00:00");
+    const ranged = endOf(e) !== d10(e.date);
+
+    let cls = "", tag = "";
+    if (endOf(e) < todayISO) cls = "done";
+    else if (d10(e.date) <= todayISO) { cls = "ing"; tag = `<span class="tag">${ranged ? "진행 중" : "오늘"}</span>`; }
+    else {
+      const left = Math.round((s0 - new Date(todayISO + "T00:00:00")) / 86400000);
+      if (left <= 7) tag = `<span class="tag soon">${left}일 뒤</span>`;
+    }
+
+    const box = `<div class="daycol"><span class="d">${s0.getDate()}</span><span class="w">${DAYS[s0.getDay()]}</span></div>
+      <div class="bar"></div>`;
+    const sameMonth = s0.getMonth() === e0.getMonth();
+    const period = ranged
+      ? `<div class="ev-period">${s0.getMonth() + 1}월 ${s0.getDate()}일 → ${sameMonth ? "" : (e0.getMonth() + 1) + "월 "}${e0.getDate()}일</div>`
+      : "";
+
+    return `<li class="${cls}">${box}
+      <div><div class="ev-title">${esc(e.title)}${tag}</div>${period}
+      ${e.meta ? `<div class="ev-meta">${esc(e.meta)}</div>` : ""}</div></li>`;
+  }).join("");
+}
+
+document.getElementById("prev").addEventListener("click", () => { viewM--; if (viewM < 0) { viewM = 11; viewY--; } renderMonth(); });
+document.getElementById("next").addEventListener("click", () => { viewM++; if (viewM > 11) { viewM = 0; viewY++; } renderMonth(); });
+
+/* ---------- 관리 화면에서 저장한 내용 불러오기 ---------- */
+async function load() {
+  try {
+    const res = await fetch(BASE + "content/linkpage.json?v=" + Date.now());
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const d = await res.json();
+    if (d.name || d.bio || d.photo) PROFILE = { name: d.name || "", bio: d.bio || "", photo: d.photo || "" };
+    LINKS = Array.isArray(d.links) ? d.links : [];
+    SCHEDULE = Array.isArray(d.schedule) ? d.schedule : [];
+  } catch (err) {
+    console.warn("내용을 불러오지 못했어요:", err.message);
+  }
+  renderProfile();
+  renderLinks();
+  renderMonth();
+}
+
+drawBand();
+load();
+</script>
+</body>
+</html>
