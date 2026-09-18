@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>달연어 Dal Yeon-eo</title>
+<title>달연어 Dal Yeon-eo | 작가 홈페이지</title>
 <meta name="description" content="작가 달연어(Dal Yeon-eo)의 회화, 디지털 드로잉, 영상, 입체 작업과 전시 이력">
-<link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="icon" type="image/png" href="images/favicon.png" sizes="any">
+<link rel="apple-touch-icon" href="images/favicon.png">
 <link rel="canonical" href="https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/">
 <!-- 카카오톡·인스타그램 등에 링크를 보낼 때 보이는 미리보기.
      그림을 바꾸려면 images/share.jpg 를 같은 이름의 새 그림으로 바꿔 올리세요(가로로 긴 1200×630 권장). -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="달연어 Dal Yeon-eo">
-<meta property="og:title" content="달연어 Dal Yeon-eo">
+<meta property="og:title" content="달연어 Dal Yeon-eo | 작가 홈페이지">
 <meta property="og:description" content="말로 다 담을 수 없는 내밀한 감정과 존재론적 질문을 물감의 물성으로 캔버스에 옮기는 작업을 한다.">
 <meta property="og:url" content="https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/">
 <meta property="og:image" content="https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/images/share.jpg">
@@ -20,6 +21,37 @@
 <meta property="og:image:alt" content="달연어의 회화 「말로: 빛의 종착지」">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
+<!-- 구조화된 데이터: 검색엔진과 AI 요약이 작가 정보를 정확히 읽도록 알려주는 부분이에요.
+     이름, 소개, 연락처가 바뀌면 여기도 함께 고쳐 주세요. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/#website",
+      "url": "https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/",
+      "name": "달연어 Dal Yeon-eo",
+      "alternateName": "달연어 작가 홈페이지",
+      "inLanguage": "ko",
+      "publisher": { "@id": "https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/#artist" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/#artist",
+      "name": "달연어",
+      "alternateName": ["Dal Yeon-eo", "달연어 Dal Yeon-eo"],
+      "jobTitle": "시각예술가",
+      "description": "말로 다 담을 수 없는 내밀한 감정과 존재론적 질문을 물감의 물성으로 캔버스에 옮기는 작업을 하는 시각예술가.",
+      "knowsAbout": ["회화", "입체", "디지털 드로잉", "그래픽", "미디어 영상"],
+      "url": "https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/",
+      "image": "https://dalyeoneo-cmd.github.io/Dalyeoneo_nook/images/share.jpg",
+      "email": "chicdotori00@gmail.com",
+      "sameAs": ["https://www.instagram.com/dal_yeoneo_nook/"]
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=IBM+Plex+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
@@ -406,7 +438,7 @@ if (pv("name_ko")) {
   $("siteName").innerHTML = nameHTML;
   $("heroName").innerHTML = nameHTML;
   $("footerName").textContent = en ? `${ko} ${en}` : ko;
-  document.title = en ? `${ko} ${en}` : ko;
+  document.title = (en ? `${ko} ${en}` : ko) + " | 작가 홈페이지";
 }
 if (pv("intro")) $("heroIntro").textContent = pv("intro");
 if (pv("statement")) {
@@ -614,8 +646,11 @@ function priceText(wk){
   if(wk.price===undefined || wk.price===null || wk.price==="") return "";
   return typeof wk.price==="number" ? wk.price.toLocaleString("ko-KR")+"원" : wk.price;
 }
+/* 판매 완료·판매 불가 작품은 가격을 감추고 상태만 보여요.
+   판매 예약은 아직 확정이 아니라 가격을 그대로 보여요. */
+const HIDE_PRICE=["판매 완료","판매 불가"];
 function saleHTML(wk){
-  const price=priceText(wk);
+  const price=HIDE_PRICE.includes(wk.status) ? "" : priceText(wk);
   const status=wk.status ? `<span class="sale ${STATUS_CLASS[wk.status]||""}">${wk.status}</span>` : "";
   return (price||status) ? `<span class="sale-line">${price?`<span class="price">${price}</span>`:""}${status}</span>` : "";
 }
