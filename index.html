@@ -161,8 +161,8 @@
   .cv-list .y{color:var(--muted);font-variant-numeric:tabular-nums}
   .cv-list .title{display:block;font-weight:400;font-size:14px}
   .cv-list .place{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
-  .cv-list .works-in{display:block;font-size:12px;color:var(--muted);margin-top:6px}
-  .cv-list .works-in button{color:var(--ink);border-bottom:1px solid var(--line);font-size:12px;line-height:1.4}
+  .cv-list .works-in{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;font-size:12px;color:var(--muted);margin-top:6px}
+  .cv-list .works-in button{color:var(--ink);border-bottom:1px solid var(--line);font-size:12px;line-height:1.4;text-align:left}
   .cv-list .works-in button:hover{border-color:var(--accent);color:var(--accent)}
   /* 전시 종류 태그: 연도 다음 칸에 세로로 정렬 */
   .cv-list.tagged li{grid-template-columns:72px 64px 1fr;gap:24px 16px}
@@ -240,10 +240,21 @@
   .viewer-close:hover{color:var(--ink)}
   .viewer-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 
+  /* 대표작이 여러 점일 때 첫 화면 캡션 아래에 붙는 점 */
+  .hero-dots{display:flex;gap:9px;margin-top:20px}
+  .hero-dots:empty{display:none}
+  .hero-dots button{width:7px;height:7px;border-radius:50%;background:var(--line)}
+  .hero-dots button[aria-current="true"]{background:var(--muted)}
+  .hero-dots button:hover{background:var(--ink)}
+
   /* 첫 화면에만 한 번 쓰는 등장 효과 */
   @media (prefers-reduced-motion:no-preference){
     .hero-art{animation:hang 1.4s cubic-bezier(.2,.7,.2,1) both}
     .hero-label,.hero-intro{animation:fade 1s .9s both}
+    /* 대표작이 바뀔 때 살짝 사라졌다 나타나요 */
+    .hero-art .art,.hero-label .label{transition:opacity .42s ease}
+    .hero-art.swap .art,.hero-label.swap .label{opacity:0}
+    .hero-dots button{transition:background .3s ease}
     @keyframes hang{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
     @keyframes fade{from{opacity:0}to{opacity:1}}
   }
@@ -267,8 +278,11 @@
   @media (max-width:560px){
     .site-nav{gap:16px}
     .site-name span{display:none}
-    .cv-list li{grid-template-columns:48px 1fr;gap:16px}
-    .cv-list.tagged li{grid-template-columns:44px 56px 1fr;gap:16px 10px}
+    /* 전시 이력: 연도와 종류 태그가 윗줄, 전시 이름·장소·출품작은 아래 한 줄을 다 써요 */
+    .cv-list:not(.edu) li{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 10px}
+    .cv-list:not(.edu) .y{flex:0 0 42px}
+    .cv-list:not(.edu) .entry{flex:1 0 100%;margin-top:4px}
+    .cv-list .works-in{flex-direction:column;align-items:flex-start;gap:3px;margin-top:8px}
     .cv-list.edu li{grid-template-columns:54px 34px 40px 1fr;gap:0}
     .cv-list .type{padding:2px 6px;font-size:10.5px}
     .work{width:100%}
@@ -301,7 +315,7 @@
       <span id="heroIntro">말로 다 담을 수 없는 내밀한 감정과 존재론적 질문을 물감의 물성으로 캔버스에 옮기는 작업을 한다.</span>
     </div>
     <button class="hero-art" id="heroArt" aria-label="대표작 크게 보기"></button>
-    <div class="hero-label label" id="heroLabel"></div>
+    <div class="hero-label label" id="heroLabel"><div class="label" id="heroLabelText"></div><div class="hero-dots" id="heroDots"></div></div>
   </div>
 
   <section id="works">
@@ -687,6 +701,7 @@ function displayWidth(wk){
 }
 
 /* ---------- 사진을 불러오면 사진 비율로 맞추기 ---------- */
+let heroList=[], heroPos=0;   /* 첫 화면에 걸리는 작품들과 지금 보이는 차례 */
 function applyNaturalRatio(img){
   if(!img.naturalWidth || !img.naturalHeight) return;
   const i = +img.dataset.wi, wk = works[i]; if(!wk || isVideo(wk)) return;
@@ -700,22 +715,70 @@ function applyNaturalRatio(img){
     const fig = art.closest("figure.work"); if(fig) fig.style.setProperty("--w", displayWidth(wk) + "px");
   });
   if(!changed) return;
-  if(i === 0) heroArt.style.maxWidth = `calc(72svh * ${r})`;
+  if(heroList[heroPos] === i) heroArt.style.maxWidth = `calc(72svh * ${r})`;
   if(viewer.open && vIndex === i) fitViewer();
 }
 document.addEventListener("load", e => { if(e.target.matches && e.target.matches("img[data-wi]")) applyNaturalRatio(e.target); }, true);
 
 /* ---------- 화면 구성 ---------- */
+/* 첫 화면 대표작
+   관리 화면에서 '첫 화면 대표작'에 체크한 작품이 차례로 바뀌면서 걸려요(최대 5점).
+   체크한 작품이 없으면 가장 최근 작품 한 점이 걸리고 바뀌지 않아요.
+   바뀌는 간격을 바꾸려면 아래 HERO_SECONDS 의 숫자만 고치면 돼요. */
+const HERO_SECONDS = 15;   /* 몇 초마다 다음 작품으로 넘어갈지 */
+const HERO_MAX = 5;        /* 첫 화면에 걸 수 있는 최대 작품 수 */
+
 const heroArt=document.getElementById("heroArt");
+const heroLabel=document.getElementById("heroLabel");
+const heroLabelText=document.getElementById("heroLabelText");
+const heroDots=document.getElementById("heroDots");
+const stillMotion = matchMedia("(prefers-reduced-motion:reduce)").matches;
+let heroTimer=null;
+
+function paintHero(){
+  const wk=works[heroList[heroPos]];
+  heroArt.innerHTML=artHTML(wk);
+  // 대표작이 한 화면 안에 들어오도록 높이를 화면의 72%로 제한
+  heroArt.style.maxWidth=`calc(72svh * ${ratioOf(wk)})`;
+  heroLabelText.innerHTML=labelHTML(wk);
+  heroArt.querySelectorAll("img[data-wi]").forEach(img=>{ img.loading="eager"; if(img.complete) applyNaturalRatio(img); });
+  heroDots.querySelectorAll("button").forEach((b,k)=>b.setAttribute("aria-current", k===heroPos?"true":"false"));
+}
+function goHero(pos){
+  if(pos===heroPos || heroList[pos]===undefined) return;
+  heroPos=pos;
+  if(stillMotion){ paintHero(); return; }   // 화면 움직임을 줄여 둔 분에게는 바로 바뀌어요
+  heroArt.classList.add("swap"); heroLabel.classList.add("swap");
+  setTimeout(()=>{ paintHero(); heroArt.classList.remove("swap"); heroLabel.classList.remove("swap"); }, 430);
+}
+function restartHeroTimer(){
+  clearInterval(heroTimer);
+  if(heroList.length<2) return;
+  heroTimer=setInterval(()=>{
+    // 작품을 크게 보는 중이거나 다른 탭을 보고 있으면 넘기지 않아요
+    if(viewer.open || document.hidden) return;
+    goHero((heroPos+1)%heroList.length);
+  }, HERO_SECONDS*1000);
+}
+
 if(!works.length){
   heroArt.hidden=true;
   document.getElementById("wall").innerHTML=`<p class="empty-note">${DATA ? "작품을 준비하고 있어요." : "작품 정보를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요."}</p>`;
 } else {
-heroArt.innerHTML=artHTML(works[0]);
-// 대표작이 한 화면 안에 들어오도록 높이를 화면의 72%로 제한
-heroArt.style.maxWidth=`calc(72svh * ${ratioOf(works[0])})`;
-document.getElementById("heroLabel").innerHTML=`<div class="label">${labelHTML(works[0])}</div>`;
-heroArt.addEventListener("click",()=>openViewer(0));
+  const picked=works.map((w,i)=>i).filter(i=>works[i].featured).slice(0,HERO_MAX);
+  heroList = picked.length ? picked : [0];
+  if(heroList.length>1){
+    heroDots.innerHTML=heroList.map((i,k)=>`<button type="button" data-h="${k}" aria-label="${works[i].title} 보기"></button>`).join("");
+    heroDots.addEventListener("click",e=>{
+      const b=e.target.closest("button[data-h]"); if(!b) return;
+      goHero(+b.dataset.h); restartHeroTimer();
+    });
+    // 다음 작품 사진을 미리 받아 두면 바뀔 때 깜빡이지 않아요
+    heroList.forEach(i=>{ if(works[i].image){ const im=new Image(); im.src=works[i].image; } });
+  }
+  paintHero();
+  heroArt.addEventListener("click",()=>openViewer(heroList[heroPos]));
+  restartHeroTimer();
 }
 
 const wall=document.getElementById("wall");
@@ -786,7 +849,7 @@ document.getElementById("cvBody").innerHTML=cv.filter(g=>g.items.length).map(g=>
       return `<li><span class="y"${sameYear?' aria-label="'+it.y+'"':''}>${sameYear?"":it.y}</span>${tag}
         <span class="entry"><span class="title">${showTitleHTML(it)}</span>${where?`<span class="place">${where}</span>`:""}${(()=>{
           const ws=worksInShow(it); if(!ws.length) return "";
-          return `<span class="works-in">출품작 ${ws.map(({w,i})=>`<button type="button" data-open="${i}">${w.title}</button>`).join(", ")}</span>`;
+          return `<span class="works-in"><span class="wi-h">출품작</span>${ws.map(({w,i})=>`<button type="button" data-open="${i}">${w.title}</button>`).join("")}</span>`;
         })()}</span></li>`;
     }).join("")}
   </ul></div>`;
