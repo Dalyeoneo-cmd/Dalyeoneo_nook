@@ -62,7 +62,7 @@
   .cap .t{font-family:var(--serif);font-size:17px;line-height:1.5;margin:0 0 3px}
   .cap .t i{font-style:normal;font-family:var(--sans);font-size:13px;color:var(--muted)}
   .cap p{margin:0;font-size:13px;color:var(--muted);line-height:1.85}
-  .cap .desc{margin-top:6px;color:var(--ink);font-size:13px;max-width:150mm}
+  .cap .desc{margin-top:6px;color:var(--ink);font-size:13px;max-width:150mm;white-space:pre-line}
   .cap .shown{margin-top:6px;font-size:12px}
 
   /* 이력 */
@@ -102,6 +102,13 @@
                        border-radius:3px;padding:7px 14px;cursor:pointer}
   .picker .acts button:hover{border-color:#8A8D88}
   .picker .picked{font-size:12.5px;color:var(--muted);margin-left:auto}
+  /* 표지 고르기 */
+  .picker .coverrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px;
+                    border-top:1px solid var(--line);padding-top:14px;font-size:12.5px}
+  .picker .coverrow > label{display:block;padding:0;font-weight:500;cursor:default}
+  .picker .coverrow select{font:inherit;font-size:12.5px;padding:6px 10px;border:1px solid var(--line);
+                           border-radius:3px;background:#fff;max-width:100%}
+  .picker .coverrow .note{color:var(--muted);font-size:11.5px}
   @media print{ .picker{display:none} }
 
   .loading{padding:40mm 0;text-align:center;color:var(--muted);font-size:14px}
@@ -245,9 +252,22 @@ function readPicked(){
 }
 let picked = new Set(readPicked());
 
+/* 표지에 쓸 작품. 비어 있으면 자동으로 골라요(대표작, 없으면 첫 작품). */
+function readCover(){
+  const c = new URLSearchParams(location.search).get("c");
+  return c ? decodeURIComponent(c.trim()) : "";
+}
+let coverKey = readCover();
+
+/* 분류 순서대로 모아요(회화 → 입체 → 디지털 드로잉 → 그래픽 → 미디어 영상) */
+const catRank = c => { const i = CAT_ORDER.indexOf(c); return i < 0 ? CAT_ORDER.length : i; };
+const chosenWorks = () => works.filter(wk => picked.has(keyOf(wk)))
+                               .sort((a, b) => catRank(a.cat) - catRank(b.cat));
+
 function saveToUrl(){
   const q = [...picked].map(encodeURIComponent).join(",");
-  history.replaceState({}, "", location.pathname + (q ? "?w=" + q : "?w="));
+  const c = coverKey ? "&c=" + encodeURIComponent(coverKey) : "";
+  history.replaceState({}, "", location.pathname + "?w=" + q + c);
 }
 
 /* ---------- 고르는 칸 그리기 ---------- */
@@ -265,6 +285,14 @@ function renderPicker(){
           <span>${esc(wk.title)} <span class="yr">${esc(wk.year)}</span></span></label>`).join("")}
       </div>`).join("")}
     </div>
+    <div class="coverrow">
+      <label for="coverSel">표지 작품</label>
+      <select id="coverSel">
+        <option value="">자동 (대표작, 없으면 첫 작품)</option>
+        ${chosenWorks().map(wk => `<option value="${esc(keyOf(wk))}"${keyOf(wk) === coverKey ? " selected" : ""}>${esc(wk.title)} (${esc(wk.year)})</option>`).join("")}
+      </select>
+      <span class="note">고른 작품 중에서 표지에 쓸 한 점을 고르세요. 이것도 주소에 함께 저장돼요.</span>
+    </div>
     <div class="acts">
       <button type="button" data-act="default">기본으로 (회화 4, 나머지 3)</button>
       <button type="button" data-act="all">모두 넣기</button>
@@ -273,8 +301,10 @@ function renderPicker(){
     </div>`;
 }
 document.getElementById("picker").addEventListener("change", e => {
+  if(e.target.id === "coverSel"){ coverKey = e.target.value; saveToUrl(); renderPages(); return; }
   const box = e.target.closest("input[type=checkbox]"); if(!box) return;
   if(box.checked) picked.add(box.value); else picked.delete(box.value);
+  if(coverKey && !picked.has(coverKey)) coverKey = "";   // 표지로 고른 작품을 빼면 자동으로 돌아가요
   saveToUrl(); renderPicker(); renderPages();
 });
 document.getElementById("picker").addEventListener("click", e => {
@@ -282,20 +312,20 @@ document.getElementById("picker").addEventListener("click", e => {
   if(b.dataset.act === "default") picked = new Set(defaultPicked());
   if(b.dataset.act === "all") picked = new Set(works.map(keyOf));
   if(b.dataset.act === "none") picked = new Set();
+  if(coverKey && !picked.has(coverKey)) coverKey = "";
   saveToUrl(); renderPicker(); renderPages();
 });
 
 /* ---------- 쪽 만들기 ---------- */
 function renderPages(){
-/* 분류 순서대로 모아서 보여줘요(회화 → 입체 → 디지털 드로잉 → 그래픽 → 미디어 영상).
-   같은 분류 안에서는 최근 작품부터예요. */
-const catRank = c => { const i = CAT_ORDER.indexOf(c); return i < 0 ? CAT_ORDER.length : i; };
-const chosen = works.filter(wk => picked.has(keyOf(wk)))
-                    .sort((a, b) => catRank(a.cat) - catRank(b.cat));
+/* 같은 분류 안에서는 최근 작품부터예요. */
+const chosen = chosenWorks();
 const pages = [];
 
-/* 표지: 고른 작품 중 대표작, 없으면 첫 작품 */
-const cover = chosen.find(wk => wk.featured) || chosen[0];
+/* 표지: 위에서 고른 작품. 안 골랐으면 대표작, 그것도 없으면 첫 작품 */
+const cover = chosen.find(wk => keyOf(wk) === coverKey)
+           || chosen.find(wk => wk.featured)
+           || chosen[0];
 pages.push(`<section class="page cover">
   <h1 class="name">${esc(nameKo)}<span>${esc(nameEn)}</span></h1>
   ${pv("intro") ? `<p class="intro">${introHTML(pv("intro"))}</p>` : ""}
