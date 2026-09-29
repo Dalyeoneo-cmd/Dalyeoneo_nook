@@ -2,11 +2,12 @@
   "title": "여름 소리",
   "year": "2023",
   "cat": "회화",
+  "image": "/images/mumwbgor-40jsetc1.jpeg",
   "medium": "종이판넬에 아크릴",
   "h": 53,
   "w": 45.5,
   "price": "200000",
   "status": "판매 완료",
   "desc": "여름날 울리는 초록색 소리",
-  "featured": false
+  "featured": true
 }
