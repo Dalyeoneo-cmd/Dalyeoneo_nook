@@ -85,7 +85,8 @@
 
   /* 첫 화면: 대표작 한 점 */
   .hero{min-height:100svh;display:grid;grid-template-columns:1fr minmax(0,44vw) 1fr;align-items:end;gap:48px;padding:140px var(--pad) 96px}
-  .hero-art{grid-column:2;justify-self:center;width:100%;cursor:zoom-in}
+  .hero-art{grid-column:2;justify-self:center;width:100%;cursor:zoom-in;--hero-h:60svh}
+  /* 걸리는 높이를 --hero-h 로 제한해요. 세로로 긴 작품이 화면을 혼자 다 차지하지 않게. */
   .hero-art .art{box-shadow:0 30px 60px -40px rgba(30,32,34,.45)}
   .hero-label{grid-column:3;align-self:end;max-width:220px;font-size:13px;line-height:1.7;color:var(--muted)}
   .hero-intro{grid-column:1;align-self:start;margin-top:12vh;max-width:290px;font-size:16px;line-height:1.85;color:var(--muted)}
@@ -263,8 +264,9 @@
   }
 
   @media (max-width:900px){
-    .hero{grid-template-columns:1fr;align-items:start;gap:28px;padding-top:120px}
+    .hero{grid-template-columns:1fr;align-items:start;align-content:start;gap:22px;padding-top:104px}
     .hero-art,.hero-label,.hero-intro{grid-column:1}
+    .hero-art{--hero-h:42svh}
     .hero-intro{order:-1;margin-top:0}
     .hero-label{max-width:none}
     .split,.contact-body{grid-template-columns:1fr}
@@ -711,6 +713,7 @@ function applyNaturalRatio(img){
   const r = img.naturalWidth / img.naturalHeight;
   const changed = !wk._r || Math.abs(wk._r - r) > 0.001;
   wk._r = r;
+  if(heroList[heroPos] === i) heroArt.style.maxWidth = `calc(var(--hero-h) * ${r})`;
   document.querySelectorAll(`img[data-wi="${i}"]`).forEach(el => {
     const art = el.closest(".art"); if(!art) return;
     art.classList.add("loaded");
@@ -718,7 +721,6 @@ function applyNaturalRatio(img){
     const fig = art.closest("figure.work"); if(fig) fig.style.setProperty("--w", displayWidth(wk) + "px");
   });
   if(!changed) return;
-  if(heroList[heroPos] === i) heroArt.style.maxWidth = `calc(72svh * ${r})`;
   if(viewer.open && vIndex === i) fitViewer();
 }
 document.addEventListener("load", e => { if(e.target.matches && e.target.matches("img[data-wi]")) applyNaturalRatio(e.target); }, true);
@@ -728,7 +730,7 @@ document.addEventListener("load", e => { if(e.target.matches && e.target.matches
    관리 화면에서 '첫 화면 대표작'에 체크한 작품이 차례로 바뀌면서 걸려요(최대 5점).
    체크한 작품이 없으면 가장 최근 작품 한 점이 걸리고 바뀌지 않아요.
    바뀌는 간격을 바꾸려면 아래 HERO_SECONDS 의 숫자만 고치면 돼요. */
-const HERO_SECONDS = 15;   /* 몇 초마다 다음 작품으로 넘어갈지 */
+const HERO_SECONDS = 9;    /* 몇 초마다 다음 작품으로 넘어갈지 */
 const HERO_MAX = 5;        /* 첫 화면에 걸 수 있는 최대 작품 수 */
 
 const heroArt=document.getElementById("heroArt");
@@ -741,8 +743,8 @@ let heroTimer=null;
 function paintHero(){
   const wk=works[heroList[heroPos]];
   heroArt.innerHTML=artHTML(wk);
-  // 대표작이 한 화면 안에 들어오도록 높이를 화면의 72%로 제한
-  heroArt.style.maxWidth=`calc(72svh * ${ratioOf(wk)})`;
+  // 걸리는 높이가 --hero-h 를 넘지 않게 폭을 맞춰요(세로로 긴 작품도 한눈에 들어오게)
+  heroArt.style.maxWidth=`calc(var(--hero-h) * ${ratioOf(wk)})`;
   heroLabelText.innerHTML=labelHTML(wk);
   heroArt.querySelectorAll("img[data-wi]").forEach(img=>{ img.loading="eager"; if(img.complete) applyNaturalRatio(img); });
   heroDots.querySelectorAll("button").forEach((b,k)=>b.setAttribute("aria-current", k===heroPos?"true":"false"));
