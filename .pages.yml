@@ -144,7 +144,7 @@ content:
         type: select
         required: true
         options:
-          values: [개인전, 기획전, 그룹전]
+          values: [개인전, 기획전, 그룹전, 공모전]
       - name: place
         label: 장소
         type: string
