@@ -28,7 +28,7 @@
   img{max-width:100%}
 
   /* 화면에서는 A4 종이가 놓인 것처럼 보여요 */
-  .page{width:210mm;min-height:297mm;padding:22mm 20mm;margin:0 auto 14px;background:#fff;
+  .page{width:210mm;height:297mm;padding:22mm 20mm;margin:0 auto 14px;background:#fff;
         display:flex;flex-direction:column;position:relative;overflow:hidden}
 
   .bar{position:sticky;top:0;z-index:10;background:#2A2C2E;color:#fff;padding:14px 20px;
@@ -48,17 +48,21 @@
   .cover .foot{position:absolute;left:20mm;right:20mm;bottom:18mm;font-size:12px;color:var(--muted);
                display:flex;justify-content:space-between}
 
-  h2{font-family:var(--sans);font-weight:400;font-size:15px;letter-spacing:.02em;margin:0 0 10mm;
+  h2{font-family:var(--sans);font-weight:400;font-size:15px;letter-spacing:.02em;margin:0 0 7mm;
      padding-bottom:4mm;border-bottom:1px solid var(--line)}
 
-  .statement p{font-family:var(--serif);font-size:15px;line-height:2.1;margin:0 0 1.3em;white-space:pre-line}
+  .statement p{font-family:var(--serif);font-size:15px;line-height:1.95;margin:0 0 1.1em;white-space:pre-line}
+  .block + .block{margin-top:10mm}
 
   /* 작품 한 장에 한 점 */
   .work-cat{font-size:11.5px;letter-spacing:.08em;color:var(--muted);margin:0 0 6mm;
             padding-bottom:3mm;border-bottom:1px solid var(--line)}
-  .work-art{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin-bottom:9mm}
-  .work-art img{max-height:180mm;width:auto;object-fit:contain}
-  .work-art .no-photo{width:110mm;height:140mm;background:#EDEEEB}
+  /* 설명이 길면 사진이 알아서 줄어들어 한 장 안에 다 들어가요 */
+  .work-art{flex:1 1 auto;display:flex;align-items:center;justify-content:center;
+            min-height:0;overflow:hidden;margin-bottom:9mm}
+  .work-art img{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain}
+  .work-art .no-photo{width:110mm;max-height:100%;aspect-ratio:11/14;background:#EDEEEB}
+  .work-cap{flex:none}
   .cap .t{font-family:var(--serif);font-size:17px;line-height:1.5;margin:0 0 3px}
   .cap .t i{font-style:normal;font-family:var(--sans);font-size:13px;color:var(--muted)}
   .cap p{margin:0;font-size:13px;color:var(--muted);line-height:1.85}
@@ -68,8 +72,9 @@
   .cap .shown .v{display:block;color:var(--ink);line-height:1.6}
 
   /* 이력 */
-  .cv-group{margin-bottom:11mm;break-inside:avoid}
-  .page.flow{min-height:0}          /* 이력처럼 길이가 늘어나는 쪽 */
+  .cv-group{margin-bottom:8mm;break-inside:avoid}
+  .cv-group:last-child{margin-bottom:0}
+  .page.flow{height:auto;min-height:0}   /* 작가 노트·이력처럼 길이가 늘어나는 쪽 */
   .cv-group h3{font-size:13px;font-weight:500;margin:0 0 4mm}
   .cv-list{list-style:none;margin:0;padding:0;font-size:12.5px}
   .cv-list li{display:grid;grid-template-columns:16mm 1fr;gap:4mm;padding:2.5mm 0;
@@ -129,7 +134,7 @@
   }
   /* 좁은 화면에서도 읽을 수 있게 */
   @media screen and (max-width:230mm){
-    .page{width:100%;min-height:0;padding:28px 22px}
+    .page{width:100%;height:auto;min-height:0;padding:28px 22px}
     .cover{padding-top:60px}
     .cover .foot{position:static;margin-top:40px}
     .work-art img,.cover .cover-art img{max-height:60vh}
@@ -192,7 +197,8 @@ const cv = [
       title: clean(r.school), _y: String(clean(r.year)), _file: r._file,
     })).sort(byYearDesc) },
   { group:"개인전", items: shows.filter(s => s.type === "개인전") },
-  { group:"기획・그룹전", items: shows.filter(s => s.type !== "개인전") },
+  { group:"기획・그룹전", items: shows.filter(s => s.type !== "개인전" && s.type !== "공모전") },
+  { group:"공모전", items: shows.filter(s => s.type === "공모전") },
 ];
 const findShow = key => shows.find(s => s.title && key && s.title.includes(key));
 
@@ -206,7 +212,7 @@ function sizeText(wk){
 function capHTML(wk){
   const size = sizeText(wk);
   const ex = wk.exhibited.map(k => { const it = findShow(k); return it ? `${it.title}${it.y ? ` (${it.y})` : ""}` : k; });
-  return `<div class="cap">
+  return `<div class="cap work-cap">
     <p class="t">${esc(wk.title)}, <i>${esc(wk.year)}</i></p>
     ${wk.medium ? `<p>${esc(wk.medium)}</p>` : ""}
     ${size ? `<p>${esc(size)}</p>` : ""}
@@ -346,15 +352,6 @@ pages.push(`<section class="page cover">
   <div class="foot"><span>Portfolio</span><span id="coverDate"></span></div>
 </section>`);
 
-/* 작가 노트 */
-if(pv("statement")){
-  const paras = pv("statement").replace(/\r\n?/g, "\n").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-  pages.push(`<section class="page">
-    <h2>작가 노트</h2>
-    <div class="statement">${paras.map(p => `<p>${esc(p)}</p>`).join("")}</div>
-  </section>`);
-}
-
 /* 작품 (한 장에 한 점) */
 chosen.forEach(wk => {
   pages.push(`<section class="page">
@@ -383,9 +380,17 @@ const cvHTML = cv.filter(g => g.items.length).map(g => {
 
 const mail = pv("email") || "chicdotori00@gmail.com";
 const insta = (pv("instagram") || "dal_yeoneo_nook").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^@/, "").replace(/\/.*$/, "");
+/* 작가 노트와 이력을 한 묶음으로 보여줘요(길면 다음 장으로 자연스럽게 이어져요) */
+const stParas = pv("statement") ? pv("statement").replace(/\r\n?/g, "\n").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean) : [];
 pages.push(`<section class="page flow">
-  <h2>이력</h2>
-  ${cvHTML || `<p class="loading">이력이 아직 없습니다.</p>`}
+  ${stParas.length ? `<div class="block">
+    <h2>작가 노트</h2>
+    <div class="statement">${stParas.map(p => `<p>${esc(p)}</p>`).join("")}</div>
+  </div>` : ""}
+  <div class="block">
+    <h2>이력</h2>
+    ${cvHTML || `<p class="loading">이력이 아직 없습니다.</p>`}
+  </div>
 </section>`);
 
 pages.push(`<section class="page">
