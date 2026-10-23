@@ -175,6 +175,7 @@
   .type.solo{background:#F6E0DC;color:#963A31}     /* 개인전: 연한 빨강 */
   .type.curated{background:#DFEEE2;color:#3A6844}  /* 기획전: 연한 초록 */
   .type.group{background:#DEE8F5;color:#35578A}    /* 그룹전: 연한 파랑 */
+  .type.open{background:#F3E6CC;color:#775417}     /* 공모전: 연한 호박 */
   /* 포스터·기간 등 상세 정보가 있는 전시는 이름을 눌러 볼 수 있어요 */
   .show-open{text-align:left;border-bottom:1px solid var(--line);line-height:1.5}
   .show-open:hover{border-color:var(--accent);color:var(--accent)}
@@ -835,7 +836,7 @@ filters.addEventListener("click",e=>{
 });
 applyWall();
 
-const TYPE_CLASS={ "개인전":"solo", "기획전":"curated", "그룹전":"group" };
+const TYPE_CLASS={ "개인전":"solo", "기획전":"curated", "그룹전":"group", "공모전":"open" };
 document.getElementById("cvBody").innerHTML=cv.filter(g=>g.items.length).map(g=>{
   // 개인전 분류의 항목은 type을 적지 않아도 '개인전' 태그가 붙습니다
   const items=g.items.map(it=>({...it, type: it.type || (g.group==="개인전" ? "개인전" : "")}));
