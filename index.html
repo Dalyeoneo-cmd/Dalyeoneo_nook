@@ -237,14 +237,8 @@ button{cursor:pointer}
 :root{--chip-l:90%;--chip-t:28%}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--chip-l:24%;--chip-t:84%}}
 :root[data-theme="dark"]{--chip-l:24%;--chip-t:84%}
-.routes{background:var(--paper);border:1px solid var(--line);border-radius:12px;margin-top:16px}
-.routes summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 14px;font-weight:600;font-size:14px}
-.routes summary::-webkit-details-marker{display:none}
-.routes summary small{font-weight:400;font-size:12px;color:var(--muted)}
-.routes summary svg{width:18px;height:18px;margin-left:auto;color:var(--muted);transition:transform .2s}
-.routes[open] summary svg{transform:rotate(180deg)}
-.routes summary:hover{color:var(--leaf)}
-.rbody{display:flex;flex-direction:column;gap:10px;padding:0 14px 14px}
+.routes{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.routes h3{font-size:15px}
 .rbar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--bg)}
 .rbar span{height:100%;background:hsl(var(--rh) 50% 55%)}
 .rleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
@@ -430,7 +424,7 @@ const LEAVE=["이사 상담을 받아들임","내가 먼저 부탁함","모르�
 const MAX=10;
 
 const S={introSeen:true,photoURLs:new Map(),idbOk:false,lastBackup:"",pendingImport:null,mode:null,db:null,assets:null,canWrite:true,villagers:[],island:{name:""},tab:"now",editIsland:false,dex:{q:"",sp:"",pe:"",st:""}};
-S.sort={now:"",gone:""};S.tlFilter="all";S.routesOpen=false;try{S.tlFilter=localStorage.getItem("acnh-tlf")||"all";S.routesOpen=!!localStorage.getItem("acnh-routes")}catch(e){}
+S.sort={now:"",gone:""};S.tlFilter="all";try{S.tlFilter=localStorage.getItem("acnh-tlf")||"all"}catch(e){}
 try{const t=localStorage.getItem("acnh-tab");if(t)S.tab=t;const so=JSON.parse(localStorage.getItem("acnh-sort")||"null");if(so)S.sort={...S.sort,...so}}catch(e){}
 
 /* ---------- helpers ---------- */
@@ -595,7 +589,7 @@ function render(){
   if(S.tab==="now")view.innerHTML=now.length?listHTML(now,"now"):emptyHTML("아직 등록된 주민이 없어요","섬에 사는 주민을 한 명씩 입주일과 함께 등록해 보세요. 입주한 지 며칠째인지 자동으로 세어 드려요.");
   else if(S.tab==="gone"){const miss=gone.filter(v=>!v.gotPhoto);if(!miss.length)S.goneNoPic=false;
     view.innerHTML=gone.length?(miss.length?`<div class="miss"><span>사진을 못 받고 떠난 주민 <b class="num">${miss.length}</b>명</span><button id="missBtn" aria-pressed="${!!S.goneNoPic}">${S.goneNoPic?"모두 보기":"이 주민만 보기"}</button></div>`:"")+listHTML(S.goneNoPic?miss:gone,"gone"):emptyHTML("떠난 주민이 없어요","주민 카드를 눌러 ‘이사 갔어요’를 기록하면 여기로 옮겨져요. 함께 산 기간과 이사 이유가 남아요.");}
-  else if(S.tab==="timeline"){view.innerHTML=timelineHTML()+routesHTML();const tl=view.querySelector(".tl");if(tl)tl.scrollLeft=tl.scrollWidth;const rb=view.querySelector("#routesBox");if(rb)rb.addEventListener("toggle",()=>{S.routesOpen=rb.open;try{localStorage.setItem("acnh-routes",rb.open?"1":"")}catch(e){}});view.querySelectorAll("[data-tlf]").forEach(b=>b.onclick=()=>{S.tlFilter=b.dataset.tlf;try{localStorage.setItem("acnh-tlf",S.tlFilter)}catch(e){}render()})}
+  else if(S.tab==="timeline"){view.innerHTML=timelineHTML()+routesHTML();const tl=view.querySelector(".tl");if(tl)tl.scrollLeft=tl.scrollWidth;view.querySelectorAll("[data-tlf]").forEach(b=>b.onclick=()=>{S.tlFilter=b.dataset.tlf;try{localStorage.setItem("acnh-tlf",S.tlFilter)}catch(e){}render()})}
   else if(S.tab==="guide"){view.innerHTML=guideHTML();const gs=view.querySelector("#guideStart");if(gs)gs.onclick=()=>{S.tab="now";render();window.scrollTo(0,0);openForm()}}
   else{renderDex();return}
   view.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openDetail(b.dataset.open));
@@ -627,8 +621,8 @@ function routesHTML(){
   const list=S.villagers.filter(v=>route(v));if(!list.length)return "";
   const c={};list.forEach(v=>{const r=route(v);c[r]=(c[r]||0)+1});
   const ent=ARRIVE.filter(r=>c[r]).map(r=>[r,c[r]]).concat(Object.keys(c).filter(r=>!ARRIVE.includes(r)).map(r=>[r,c[r]]));
-  return `<details class="routes" id="routesBox" ${S.routesOpen?"open":""}><summary><span>이사 경로 통계</span><small class="num">${list.length}명</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="rbody"><div class="rbar">${ent.map(([r,n])=>`<span style="--rh:${RHUE[r]??60};width:${n/list.length*100}%" title="${esc(r)} ${n}명"></span>`).join("")}</div>
-  <div class="rleg">${ent.map(([r,n])=>`<span style="--rh:${RHUE[r]??60}"><i></i>${esc(r)} <b class="num">${n}</b>명</span>`).join("")}</div></div></details>`;
+  return `<section class="routes"><h3>이사 경로</h3><div class="rbar">${ent.map(([r,n])=>`<span style="--rh:${RHUE[r]??60};width:${n/list.length*100}%" title="${esc(r)} ${n}명"></span>`).join("")}</div>
+  <div class="rleg">${ent.map(([r,n])=>`<span style="--rh:${RHUE[r]??60}"><i></i>${esc(r)} <b class="num">${n}</b>명</span>`).join("")}</div></section>`;
 }
 
 
@@ -663,7 +657,7 @@ function guideHTML(){
     <li>주민이 <b>떠난 주민</b> 탭으로 옮겨지고, 함께 산 기간이 남아요. 사진을 못 받고 떠난 주민은 따로 모아 볼 수 있어요.</li></ol>`)}
   ${sec("5. 둘러보기",`<ul>
     <li><b>정렬</b>: 사는 주민과 떠난 주민 목록을 이름순, 거주 기간순, 지박령·최애 먼저, 종족별, 성격별로 바꿔 봐요.</li>
-    <li><b>타임라인</b>: 누가 언제부터 언제까지 살았는지 막대로 보여 줘요. 막대 안에 거주 일수가 적혀 있고, 노란 점선이 오늘이에요. 위쪽에서 평균 거주 기간과 가장 오래 산 주민을 볼 수 있고, 아래쪽 <b>이사 경로 통계</b>를 누르면 경로별 주민 수가 펼쳐져요.</li>
+    <li><b>타임라인</b>: 누가 언제부터 언제까지 살았는지 막대로 보여 줘요. 막대 안에 거주 일수가 적혀 있고, 노란 점선이 오늘이에요. 위쪽에서 평균 거주 기간과 가장 오래 산 주민을, 아래쪽에서 이사 경로 통계를 볼 수 있어요.</li>
     <li><b>도감</b>: 주민 413명 중 몇 명을 만났는지 보여 줘요. 종족, 성격, 만남 여부, 사진 여부로 거를 수 있고, 못 만난 주민을 누르면 바로 등록할 수 있어요.</li></ul>`)}
   ${sec("6. 백업과 기기 옮기기",`<ul>
     <li>맨 아래 <b>백업 파일 저장</b>을 누르면 기록과 사진이 파일 하나로 저장돼요.</li>
