@@ -215,7 +215,9 @@ function renderProfile() {
     av.textContent = (PROFILE.name || "?").charAt(0);
   });
   document.title = PROFILE.name || "링크";
-  document.getElementById("footer").textContent = "© " + new Date().getFullYear() + " " + (PROFILE.name || "");
+  /* 저작권 한 줄. 프로필 그림도 작가 그림이라 이름을 한글·영문으로 같이 밝혀요. */
+  document.getElementById("footer").textContent =
+    "© " + new Date().getFullYear() + " " + (PROFILE.name || "") + " Dal Yeon-eo";
 }
 
 /* ---------- 링크 버튼 ---------- */
