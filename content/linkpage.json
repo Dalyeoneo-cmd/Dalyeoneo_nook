@@ -16,6 +16,13 @@
       "sub": "영상 작업, 작업 과정, 그리고 취미 활동",
       "url": "https://www.youtube.com/@Dalyeoneo_xwx",
       "shape": "세모"
+    },
+    {
+      "visible": false,
+      "title": "캔버스 설치 시뮬레이터",
+      "sub": "호수 계산부터 벽면 설치 시안까지",
+      "url": "https://dalyeoneo-cmd.github.io/canvas-ho/#table",
+      "shape": "마름모"
     }
   ],
   "schedule": [
