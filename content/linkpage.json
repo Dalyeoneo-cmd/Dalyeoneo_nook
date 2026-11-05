@@ -19,7 +19,7 @@
     },
     {
       "visible": true,
-      "title": "🖼️ 캔버스 설치 시뮬레이터",
+      "title": "캔버스 설치 시뮬레이터",
       "sub": "호수 계산부터 벽면 설치 시안까지",
       "url": "https://dalyeoneo-cmd.github.io/canvas-ho/#table",
       "shape": "네모",
