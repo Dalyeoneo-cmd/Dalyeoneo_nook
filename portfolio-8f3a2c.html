@@ -40,8 +40,6 @@
 
   /* 표지 */
   .cover{justify-content:center;align-items:center;text-align:center;padding-bottom:34mm}
-  /* 표지 낙관. 이름 위에 도장처럼 찍혀요. */
-  .cover .seal{width:15mm;height:15mm;display:block;margin:0 auto 7mm}
   .cover .name{font-family:var(--serif);font-size:30px;line-height:1.4;margin:0}
   .cover .name span{display:block;font-family:var(--sans);font-size:15px;color:var(--muted);margin-top:8px;letter-spacing:.04em}
   .cover .intro{font-size:14px;line-height:2.1;max-width:150mm;margin:18px auto 0;color:var(--ink);word-break:keep-all}
@@ -173,9 +171,6 @@ const byYearDesc = (a,b) => (yearKey(b._y) - yearKey(a._y)) || String(b._file||"
 const P = (DATA.profile && typeof DATA.profile === "object") ? DATA.profile : {};
 const pv = k => String(clean(P[k])).trim();
 const nameKo = pv("name_ko") || "달연어", nameEn = pv("name_en") || "Dal Yeon-eo";
-
-/* 작가 낙관(붉은 도장). 그림 파일이 아니라 코드로 그려서 인쇄해도 안 깨져요. */
-const SEAL = `<svg class="seal" viewBox="4 4 192 192" aria-label="달연어 낙관" role="img"><defs><mask id="sealCut" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200"><rect x="0" y="0" width="200" height="200" fill="#fff"/><g transform="translate(15.83 12) scale(0.88)" fill="#000"><path d="M 121.3 46.5 A 62 62 0 1 0 121.3 153.5 A 54 54 0 1 1 121.3 46.5 Z" stroke="#000" stroke-width="3" stroke-linejoin="round"/><g transform="translate(131 102) rotate(12) scale(0.7)"><path d="M -40 2 C -36 -8, -24 -15, -6 -16 C 10 -16, 22 -11, 30 -5 L 44 -15 Q 38 1 44 16 L 30 5 C 22 10, 10 13, -6 13 C -22 13, -34 9, -40 2 Z" stroke="#000" stroke-width="2" stroke-linejoin="round"/><path d="M -10 -15.5 Q -2 -27 8 -24 L 6 -15 Z"/><path d="M-22 11 C-20.36 14.68 -14.7 18.98 -11.81 18.65 C-9.99 18.44 -11.32 14.8 -9 13 Z"/><path d="M10.76 11.03 L24.88 6.08 L24.81 12.34 Z" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/></g></g><circle cx="114.45" cy="96.91" r="1.4" fill="#fff"/></mask></defs><rect x="4" y="4" width="192" height="192" rx="26" fill="#B5452F" mask="url(#sealCut)"/></svg>`;
 
 /* ---------- 작품 ---------- */
 const works = entries(DATA.works).map(r => {
@@ -354,7 +349,6 @@ const cover = chosen.find(wk => keyOf(wk) === coverKey)
            || chosen.find(wk => wk.featured)
            || chosen[0];
 pages.push(`<section class="page cover">
-  ${SEAL}
   <h1 class="name">${esc(nameKo)}<span>${esc(nameEn)}</span></h1>
   ${pv("intro") ? `<p class="intro">${introHTML(pv("intro"))}</p>` : ""}
   ${cover ? `<div class="cover-art">${artHTML(cover)}</div>` : ""}

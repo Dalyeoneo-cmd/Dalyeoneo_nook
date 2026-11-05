@@ -73,13 +73,14 @@
   .sign .date b{display:block;color:var(--ink);font-weight:400;font-size:13.5px;margin-top:2mm}
   .sign .who{text-align:right;min-width:80mm}
   .sign .who .label{font-size:12px;color:var(--muted)}
-  /* 서명란(손으로 쓰는 빈 줄) 오른쪽에 낙관이 찍혀요. */
-  .sign .who .signrow{display:flex;align-items:flex-end;gap:5mm}
-  .sign .who .line{flex:1;border-bottom:1px solid var(--ink);height:17mm;display:flex;align-items:flex-end;
+  /* 서명란은 손으로 쓰는 빈 줄. 낙관은 줄 아래 이름 옆에 찍혀요. */
+  .sign .who .line{border-bottom:1px solid var(--ink);height:15mm;display:flex;align-items:flex-end;
                    justify-content:flex-end;padding-bottom:2mm}
-  .sign .who .line img{max-height:15mm;width:auto}
-  .sign .who .seal{width:14mm;height:14mm;flex-shrink:0;display:block;margin-bottom:1mm}
-  .sign .who .name{font-family:var(--serif);font-size:14px;margin-top:2.5mm}
+  .sign .who .line img{max-height:13mm;width:auto}
+  .sign .who .namerow{display:flex;align-items:center;justify-content:flex-end;gap:2.5mm;margin-top:3mm}
+  /* 낙관은 이름 글씨와 같은 높이로. 혼자 커 보이지 않게요. */
+  .sign .who .seal{width:6.4mm;height:6.4mm;flex-shrink:0;display:block}
+  .sign .who .name{font-family:var(--serif);font-size:14px;margin:0}
 
   .foot{margin-top:8mm;padding-top:3.5mm;border-top:1px solid var(--line);
         display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
@@ -225,11 +226,10 @@ function render(){
         <b>${esc(state.date)}${state.place ? " · " + esc(state.place) : ""}</b></div>
       <div class="who">
         <p class="label">작가 서명</p>
-        <div class="signrow">
-          <div class="line">${state.sign ? `<img src="${state.sign}" alt="작가 서명">` : ""}</div>
-          ${SEAL}
+        <div class="line">${state.sign ? `<img src="${state.sign}" alt="작가 서명">` : ""}</div>
+        <div class="namerow">${SEAL}
+          <p class="name">${esc(nameKo)} <span style="font-family:var(--sans);font-size:11.5px;color:var(--muted)">${esc(nameEn)}</span></p>
         </div>
-        <p class="name">${esc(nameKo)} <span style="font-family:var(--sans);font-size:11.5px;color:var(--muted)">${esc(nameEn)}</span></p>
       </div>
     </div>
 
