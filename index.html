@@ -135,6 +135,13 @@
   .sale.reserved::before{background:#E0A526}  /* 판매 예약: 노란 점 */
   .sale.nfs::before{background:#A5A9AD}       /* 판매 불가: 회색 점 */
   .empty-note{grid-column:1/-1;width:100%;text-align:center;color:var(--muted);font-size:14px;margin:40px 0}
+  /* 작품·이력을 받아오는 동안 잠깐 보이는 안내. 다 받아오면 저절로 사라져요. */
+  .loading-note{width:100%;color:var(--muted);font-size:14px;margin:40px 0}
+  .wall .loading-note{text-align:center}
+  @media (prefers-reduced-motion:no-preference){
+    .loading-note{animation:breathe 1.6s ease-in-out infinite}
+    @keyframes breathe{0%,100%{opacity:.4}50%{opacity:1}}
+  }
   .scale-note{text-align:center;font-size:12px;color:var(--muted);margin-top:96px}
   .art{position:relative;width:100%;overflow:hidden;background:#e7e8e5}
   .art svg,.art img{display:block;width:100%;height:100%;object-fit:cover}
@@ -353,7 +360,7 @@
       <h2>작업</h2>
       <div class="filters" id="filters" role="group" aria-label="분류별 보기"></div>
     </div>
-    <div class="wall" id="wall"></div>
+    <div class="wall" id="wall" aria-busy="true"><p class="loading-note">작품을 불러오는 중…</p></div>
     <div class="more-wrap" id="moreWrap" hidden><button type="button" class="more-btn" id="moreBtn">작품 더 보기<span class="count" id="moreCount"></span></button></div>
     <p class="scale-note">회화와 입체 작품은 실제 크기의 비율에 맞춰 걸려 있습니다. 누르면 크게 보거나 재생할 수 있습니다.</p>
   </section>
@@ -377,7 +384,7 @@
 
   <section id="cv" class="split">
     <h2>이력</h2>
-    <div class="cv" id="cvBody"></div>
+    <div class="cv" id="cvBody" aria-busy="true"><p class="loading-note">이력을 불러오는 중…</p></div>
   </section>
 
   <section id="contact" class="split">
@@ -792,6 +799,7 @@ function restartHeroTimer(){
   }, HERO_SECONDS*1000);
 }
 
+document.getElementById("wall").removeAttribute("aria-busy");
 if(!works.length){
   heroArt.hidden=true;
   document.getElementById("wall").innerHTML=`<p class="empty-note">${DATA ? "작품을 준비하고 있어요." : "작품 정보를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요."}</p>`;
@@ -893,7 +901,8 @@ document.getElementById("cvBody").innerHTML=cv.filter(g=>g.items.length).map(g=>
       </ul>
     </div>`).join("")}
   </div></div>`;
-}).join("");
+}).join("") || `<p class="empty-note">${DATA ? "이력을 준비하고 있어요." : "이력을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요."}</p>`;
+document.getElementById("cvBody").removeAttribute("aria-busy");
 
 document.getElementById("cvBody").addEventListener("click",e=>{
   const s=e.target.closest("button[data-show]"); if(s) return openShow(s.dataset.show);
