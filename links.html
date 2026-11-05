@@ -110,6 +110,10 @@
   .pill .label { flex: 1; }
   .pill .sub { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
   .shape { width: 38px; height: 38px; flex-shrink: 0; }
+  /* 도형 대신 사진을 넣은 버튼. 도형과 같은 크기·테두리라 줄이 흐트러지지 않아요. */
+  .photo { width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%;
+           object-fit: cover; border: 2.5px solid var(--ink); background: var(--yellow); }
+  .pill .photo { pointer-events: none; user-select: none; }
 
   footer { text-align: center; font-family: "Gaegu", cursive; font-size: 16px; color: var(--muted); margin-top: 36px; }
 
@@ -220,23 +224,50 @@ function renderProfile() {
     "© " + new Date().getFullYear() + " " + (PROFILE.name || "") + " Dal Yeon-eo";
 }
 
-/* ---------- 링크 버튼 ---------- */
-function shapeIcon(kind) {
+/* ---------- 링크 버튼 ----------
+   아이콘 색은 아래 목록을 위에서부터 차례로 돌려 써요.
+   관리 화면에서 '아이콘 색'을 고른 버튼은 그 색으로 고정돼요. */
+const PALETTE = [
+  { key: "노랑", bg: "#F3C717", fg: "#D90000" },
+  { key: "빨강", bg: "#D90000", fg: "#FFF3CF" },
+  { key: "보라", bg: "#6A1FD0", fg: "#F3C717" },
+  { key: "초록", bg: "#2E9E68", fg: "#FFF3CF" },
+  { key: "하늘", bg: "#3F9FD4", fg: "#FFF3CF" },
+  { key: "주황", bg: "#EE8420", fg: "#FFF3CF" },
+];
+/* 고른 색이 있으면 그 색, 없으면 순서대로 돌아가는 색 */
+function pickColor(name, order) {
+  const found = PALETTE.find(p => p.key === String(name || "").trim());
+  return found || PALETTE[order % PALETTE.length];
+}
+
+function shapeIcon(kind, col) {
   const I = C.ink, w = (inner) =>
     `<svg class="shape" viewBox="0 0 38 38" aria-hidden="true">
-       <circle cx="19" cy="19" r="17" fill="${C.yellow}" stroke="${I}" stroke-width="2.5"/>${inner}</svg>`;
+       <circle cx="19" cy="19" r="17" fill="${col.bg}" stroke="${I}" stroke-width="2.5"/>${inner}</svg>`;
+  const F = col.fg;
   const line = `stroke="${I}" stroke-width="2" stroke-linejoin="round"`;
   switch (kind) {
-    case "세모":   return w(`<path d="M12 26 L19 11 L26 26 z" fill="${C.purple}" ${line}/>`);
-    case "네모":   return w(`<rect x="12" y="12" width="14" height="14" fill="${C.red}" ${line}/>`);
-    case "반원":   return w(`<path d="M11 23 a8 8 0 0 1 16 0 z" fill="${C.purple}" ${line}/>`);
-    case "부채꼴": return w(`<path d="M12 26 L12 12 a14 14 0 0 1 14 14 z" fill="${C.red}" ${line}/>`);
-    case "마름모": return w(`<path d="M19 10 L28 19 L19 28 L10 19 z" fill="${C.purple}" ${line}/>`);
-    case "엑스":   return w(`<path d="M13 13 L25 25 M25 13 L13 25" stroke="${C.red}" stroke-width="4" stroke-linecap="round"/>`);
-    case "하트":   return w(`<path d="M19 27 C9 20 11 12 15.5 12 C17.6 12 19 13.8 19 15.2 C19 13.8 20.4 12 22.5 12 C27 12 29 20 19 27 z" fill="${C.red}" ${line}/>`);
-    case "도넛":   return w(`<circle cx="19" cy="19" r="8" fill="none" stroke="${C.purple}" stroke-width="4.5"/>`);
-    default:       return w(`<circle cx="19" cy="19" r="7" fill="${C.red}" ${line}/>`);
+    case "세모":   return w(`<path d="M12 26 L19 11 L26 26 z" fill="${F}" ${line}/>`);
+    case "네모":   return w(`<rect x="12" y="12" width="14" height="14" fill="${F}" ${line}/>`);
+    case "반원":   return w(`<path d="M11 23 a8 8 0 0 1 16 0 z" fill="${F}" ${line}/>`);
+    case "부채꼴": return w(`<path d="M12 26 L12 12 a14 14 0 0 1 14 14 z" fill="${F}" ${line}/>`);
+    case "마름모": return w(`<path d="M19 10 L28 19 L19 28 L10 19 z" fill="${F}" ${line}/>`);
+    case "엑스":   return w(`<path d="M13 13 L25 25 M25 13 L13 25" stroke="${F}" stroke-width="4" stroke-linecap="round"/>`);
+    case "하트":   return w(`<path d="M19 27 C9 20 11 12 15.5 12 C17.6 12 19 13.8 19 15.2 C19 13.8 20.4 12 22.5 12 C27 12 29 20 19 27 z" fill="${F}" ${line}/>`);
+    case "도넛":   return w(`<circle cx="19" cy="19" r="8" fill="none" stroke="${F}" stroke-width="4.5"/>`);
+    default:       return w(`<circle cx="19" cy="19" r="7" fill="${F}" ${line}/>`);
   }
+}
+
+/* 사진을 올린 버튼은 도형 대신 그 사진을 동그랗게 보여줘요.
+   사진 주소가 잘못돼 안 뜨면 원래 도형으로 돌아가요. */
+function linkIcon(l, order) {
+  const col = pickColor(l.color, order);
+  const src = resolve(l.photo);
+  if (!src) return shapeIcon(l.shape, col);
+  return `<img class="photo" src="${esc(src)}" alt="" loading="lazy"
+    onerror="this.outerHTML=this.dataset.fallback" data-fallback="${esc(shapeIcon(l.shape, col))}">`;
 }
 
 function esc(t) {
@@ -247,8 +278,8 @@ function esc(t) {
 function renderLinks() {
   document.getElementById("links").innerHTML = LINKS
     .filter(l => l && l.visible !== false && l.url)
-    .map(l => `<li><a class="pill" href="${esc(l.url)}" target="_blank" rel="noopener">
-      ${shapeIcon(l.shape)}<span class="label">${esc(l.title)}${l.sub ? `<span class="sub">${esc(l.sub)}</span>` : ""}</span></a></li>`)
+    .map((l, i) => `<li><a class="pill" href="${esc(l.url)}" target="_blank" rel="noopener">
+      ${linkIcon(l, i)}<span class="label">${esc(l.title)}${l.sub ? `<span class="sub">${esc(l.sub)}</span>` : ""}</span></a></li>`)
     .join("");
 }
 
