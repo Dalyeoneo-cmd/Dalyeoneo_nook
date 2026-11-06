@@ -932,8 +932,11 @@ function openViewer(i, fromHash){
   if(location.hash !== hash) history.pushState({work:key}, "", hash);
 }
 function syncFromHash(){
-  const key=decodeURIComponent(location.hash.slice(1));
-  const i=key ? works.findIndex(w=>workKey(w)===key) : -1;
+  let key=""; try{ key=decodeURIComponent(location.hash.slice(1)); }catch(e){ key=location.hash.slice(1); }
+  /* 작품 번호로 찾고, 없으면 파일 이름으로도 찾아요.
+     번호를 나중에 붙여도 예전에 보낸 주소가 그대로 열리게요. */
+  let i = key ? works.findIndex(w=>workKey(w)===key) : -1;
+  if(i<0 && key) i = works.findIndex(w=>String((w && w._file) || "").trim()===key);
   if(i>=0) openViewer(i, true);
   else if(viewer.open) viewer.close(true);
 }
