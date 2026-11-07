@@ -51,7 +51,10 @@
   /* 보증서 */
   .page{width:210mm;height:297mm;padding:15mm 22mm 13mm;margin:0 auto 14px;background:#fff;
         display:flex;flex-direction:column;position:relative;overflow:hidden}
-  .head{text-align:center;padding-bottom:5mm;border-bottom:1px solid var(--line)}
+  .head{text-align:center;padding-bottom:5mm;border-bottom:1px solid var(--line);position:relative}
+  /* 보증서 번호는 이 종이 한 장에 붙은 번호라, 작품 정보 표가 아니라
+     상장처럼 왼쪽 위 모서리에 둬요. */
+  .head .docno{position:absolute;left:0;top:1.5mm;text-align:left;font-size:12px;color:var(--ink);letter-spacing:.04em}
   .head .ko{font-family:var(--serif);font-size:23px;letter-spacing:.06em;margin:0}
   .head .en{font-size:11.5px;letter-spacing:.16em;color:var(--muted);margin:5px 0 0;text-transform:uppercase}
   .head .artist{font-family:var(--serif);font-size:15px;margin:4.5mm 0 0}
@@ -273,6 +276,7 @@ function render(){
   out.innerHTML = `
   <section class="page">
     <div class="head">
+      ${state.coa ? `<span class="docno">${esc(state.coa)}</span>` : ""}
       <p class="ko">작품 보증서</p>
       <p class="en">Certificate of Authenticity</p>
       <p class="artist">${esc(nameKo)}<span>${esc(nameEn)}</span></p>
@@ -291,7 +295,6 @@ function render(){
           size && ["크기", esc(size)],
           wk.edition && ["에디션", esc(wk.edition)],
           wk.number && ["작품 번호", esc(wk.number)],
-          state.coa && ["보증서 번호", esc(state.coa)],
           ["소장자", state.owner ? esc(state.owner) : "&nbsp;"],
           ["구매일자", state.buyDate ? esc(state.buyDate) : "&nbsp;"],
           ["구매처", state.buyFrom ? esc(state.buyFrom) : "&nbsp;"],
