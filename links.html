@@ -92,6 +92,7 @@
   }
   .tag.soon { background: var(--purple); }
   .empty { font-family: "Gaegu", cursive; font-size: 18px; color: var(--muted); padding: 6px 0; }
+  [hidden] { display: none !important; }
 
   /* 링크 버튼 */
   .links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
@@ -136,7 +137,7 @@
   </header>
 
   <main class="content">
-    <section class="schedule" aria-labelledby="monthTitle">
+    <section class="schedule" aria-labelledby="monthTitle" hidden>
       <div class="sched-head">
         <h2 id="monthTitle"></h2>
         <div class="month-nav">
@@ -290,6 +291,34 @@ let viewY = today.getFullYear(), viewM = today.getMonth();
 function d10(v) { return typeof v === "string" ? v.slice(0, 10) : ""; }
 function endOf(e) { const en = d10(e.end); return en && en >= d10(e.date) ? en : d10(e.date); }
 
+/* 일정이 걸쳐 있는 달을 모두 모아요. 여러 달에 걸친 전시도 빠짐없이 세요. */
+function monthsWithEvents() {
+  const set = new Set();
+  for (const e of SCHEDULE) {
+    const s = d10(e && e.date); if (!s) continue;
+    const en = endOf(e) || s;
+    let y = +s.slice(0, 4), m = +s.slice(5, 7);
+    const ey = +en.slice(0, 4), em = +en.slice(5, 7);
+    let guard = 0;
+    while ((y < ey || (y === ey && m <= em)) && guard++ < 240) {
+      set.add(`${y}-${String(m).padStart(2, "0")}`);
+      if (++m > 12) { m = 1; y++; }
+    }
+  }
+  return [...set].sort();
+}
+
+/* 처음 열었을 때 보여줄 달.
+   이 달에 일정이 있으면 이 달, 없으면 가장 가까운 앞으로의 달,
+   그것도 없으면 일정이 있던 마지막 달을 엽니다.
+   처음 온 사람에게 "일정 없음"이 먼저 보이지 않게 하려는 거예요. */
+function pickStartMonth() {
+  const months = monthsWithEvents();
+  if (!months.length) return null;
+  const now = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  return months.find(m => m >= now) || months[months.length - 1];
+}
+
 function renderMonth() {
   document.getElementById("monthTitle").textContent = `${viewY}년 ${viewM + 1}월 일정`;
   const mm = String(viewM + 1).padStart(2, "0");
@@ -299,7 +328,7 @@ function renderMonth() {
     .sort((a, b) => d10(a.date).localeCompare(d10(b.date)));
 
   const ul = document.getElementById("events");
-  if (!list.length) { ul.innerHTML = `<li class="empty">이 달에는 등록된 일정이 없어요.</li>`; return; }
+  if (!list.length) { ul.innerHTML = `<li class="empty">이 달에는 일정이 없어요.</li>`; return; }
 
   const todayISO = new Date().toISOString().slice(0, 10);
   ul.innerHTML = list.map(e => {
@@ -344,6 +373,16 @@ async function load() {
   }
   renderProfile();
   renderLinks();
+
+  const start = pickStartMonth();
+  const sec = document.querySelector(".schedule");
+  if (start) {
+    viewY = +start.slice(0, 4);
+    viewM = +start.slice(5, 7) - 1;
+    if (sec) sec.hidden = false;
+  } else if (sec) {
+    sec.hidden = true;     /* 일정이 하나도 없으면 빈 칸을 보여주지 않아요 */
+  }
   renderMonth();
 }
 
